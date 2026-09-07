@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAP Prognos Demo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 50px;
+            display: flex;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #005a9e;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #0078d4;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #005a9e;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 6px;
+            display: none;
+        }
+        .result-box h3 {
+            margin: 0 0 5px 0;
+            color: #0050b3;
+            font-size: 16px;
+        }
+        .result-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #096dd9;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>SAP Prognos - Demand API</h1>
+        
+        <div class="form-group">
+            <label>Store ID</label>
+            <input type="number" id="store" value="2">
+        </div>
+        <div class="form-group">
+            <label>Item ID</label>
+            <input type="number" id="item" value="10">
+        </div>
+        <div class="form-group">
+            <label>Forecast Date</label>
+            <input type="date" id="date" value="2018-01-01">
+        </div>
+        
+        <button onclick="getForecast()">Get Forecast</button>
+
+        <div class="result-box" id="resultBox">
+            <h3>Predicted Demand</h3>
+            <div class="result-value" id="forecastValue">...</div>
+        </div>
+    </div>
+
+    <script>
+        async function getForecast() {
+            const btn = document.querySelector('button');
+            const resultBox = document.getElementById('resultBox');
+            const forecastValue = document.getElementById('forecastValue');
+            
+            btn.innerText = "Processing...";
+            
+            const payload = {
+                store: parseInt(document.getElementById('store').value),
+                item: parseInt(document.getElementById('item').value),
+                date: document.getElementById('date').value,
+                sales_lag_1: 45.0, // Fixed historical lags for demo ease
+                sales_lag_7: 38.0,
+                sales_roll_mean_7: 40.5
+            };
+
+            try {
+                const response = await fetch("http://localhost:8000/forecast", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    forecastValue.innerText = data.forecasted_sales + " units";
+                    resultBox.style.display = "block";
+                    resultBox.style.backgroundColor = "#e6f7ff";
+                    resultBox.style.borderColor = "#91d5ff";
+                } else {
+                    forecastValue.innerText = "Error";
+                    resultBox.style.display = "block";
+                    resultBox.style.backgroundColor = "#fff1f0";
+                    resultBox.style.borderColor = "#ffa39e";
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+                forecastValue.innerText = "Server Unreachable";
+                resultBox.style.display = "block";
+                resultBox.style.backgroundColor = "#fff1f0";
+                resultBox.style.borderColor = "#ffa39e";
+            }
+            
+            btn.innerText = "Get Forecast";
+        }
+    </script>
+
+</body>
+</html>

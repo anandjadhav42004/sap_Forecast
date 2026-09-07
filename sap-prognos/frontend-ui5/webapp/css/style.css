@@ -1,0 +1,238 @@
+/* General Layout */
+.dashboardContainer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Global App Background */
+.sapUiBody, .mainContentBg {
+    background: radial-gradient(circle at 10% 20%, #111827 0%, #0a0f1c 100%) !important;
+    color: #e2e8f0;
+}
+
+/* Header Override */
+.navyHeader {
+    background-color: rgba(15, 23, 42, 0.75) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.headerTitle {
+    color: #ffffff !important;
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    margin-left: 0.5rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.avatarIcon {
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    color: white;
+    border-radius: 50%;
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+    text-align: center;
+    font-size: 0.875rem !important;
+    cursor: pointer;
+    display: inline-block;
+    border: 2px solid rgba(255,255,255,0.2);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.bellIcon {
+    cursor: pointer;
+    color: #94a3b8 !important;
+    transition: color 0.3s;
+}
+
+.bellIcon:hover {
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(255,255,255,0.8);
+}
+
+/* Glassmorphic Panels / Cards */
+.cardPanel {
+    background: rgba(30, 41, 59, 0.6) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    padding: 1.5rem;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+/* Glassmorphic Title Text */
+.cardTitle {
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    color: #94a3b8 !important;
+}
+
+/* Highlight Cards */
+.highlightCard {
+    border-radius: 16px;
+    padding: 1.5rem;
+    background: rgba(30, 41, 59, 0.6) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.highlightCard:hover {
+    transform: translateY(-2px);
+}
+
+.blueTint {
+    border-left: 4px solid #3b82f6;
+    background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(30,41,59,0.6) 100%) !important;
+}
+
+.tealTint {
+    border-left: 4px solid #14b8a6;
+    background: linear-gradient(135deg, rgba(20,184,166,0.1) 0%, rgba(30,41,59,0.6) 100%) !important;
+}
+
+.highlightValue {
+    font-size: 3rem !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    text-shadow: 0 0 20px currentColor;
+}
+
+.blueText {
+    color: #60a5fa !important;
+}
+
+.tealText {
+    color: #2dd4bf !important;
+}
+
+/* Bottom Stat Tiles */
+.statTile {
+    background: rgba(15, 23, 42, 0.6) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.activeTile {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border: 1px solid #8b5cf6 !important; /* purple glow */
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+}
+
+.tileTitle {
+    font-size: 0.875rem !important;
+    color: #94a3b8 !important;
+    margin-bottom: 0.5rem;
+    font-weight: 600 !important;
+}
+
+.tileValue {
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    color: #f8fafc !important;
+}
+
+.activeTile .tileValue {
+    color: #a78bfa !important;
+    text-shadow: 0 0 15px rgba(167, 139, 250, 0.8);
+}
+
+.tileMetric {
+    font-size: 0.75rem !important;
+    color: #64748b !important;
+    text-transform: uppercase;
+    margin-top: 0.25rem;
+}
+
+/* KPI Top Strip Tiles */
+.kpiTile {
+    background: rgba(30, 41, 59, 0.4) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 12px;
+    padding: 1rem;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.kpiLabel {
+    font-size: 0.8rem !important;
+    color: #94a3b8 !important;
+    margin-bottom: 0.25rem;
+}
+
+.kpiValue {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #f1f5f9 !important;
+}
+
+/* Alert Banner */
+.alertBanner {
+    background: rgba(217, 119, 6, 0.15) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(217, 119, 6, 0.3) !important;
+    border-radius: 12px !important;
+    padding: 1rem !important;
+    box-shadow: 0 0 15px rgba(217,119,6,0.1);
+}
+
+.alertText {
+    color: #fbbf24 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+}
+
+/* Table Overrides */
+.sapMListTbl {
+    background-color: transparent !important;
+}
+
+.sapMListTblRow {
+    background-color: rgba(30, 41, 59, 0.4) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+}
+
+.sapMListTblRow:hover {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+}
+
+.sapMText {
+    color: #e2e8f0 !important;
+}
+
+.sapMLabel {
+    color: #94a3b8 !important;
+}
+
+/* Overriding SAP inputs for glassmorphism */
+.sapMInputBaseInner, .sapMSelect, .sapMBtn {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #f8fafc !important;
+}
+
+.sapMBtnEmphasized {
+    background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5) !important;
+    color: white !important;
+}
+
+.sapMBtnEmphasized:hover {
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.7) !important;
+}

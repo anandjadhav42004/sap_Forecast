@@ -1,0 +1,5 @@
+Model,RMSE,MAE,MAPE(%)
+Baseline (7-Day MA),12.06,9.21,17.44
+Prophet (Sampled 5 Series),5.76,4.50,16.99
+XGBoost (Sampled 5 Series),5.86,4.59,17.16
+XGBoost (Full Global),8.53,6.58,12.93

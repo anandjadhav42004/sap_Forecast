@@ -1,0 +1,218 @@
+<mvc:View
+    controllerName="sap.prognos.controller.App"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:l="sap.ui.layout"
+    xmlns:core="sap.ui.core"
+    xmlns:tnt="sap.tnt"
+    displayBlock="true">
+    
+    <tnt:ToolPage id="toolPage">
+        <!-- Header -->
+        <tnt:header>
+            <tnt:ToolHeader class="navyHeader">
+                <Button icon="sap-icon://menu2" type="Transparent" press=".onCollapseExpandPress" />
+                <core:Icon src="sap-icon://line-chart" color="#ffffff" class="sapUiSmallMarginBegin" />
+                <Title text="SAP Prognos — Demand Forecasting" class="headerTitle" />
+                <ToolbarSpacer />
+                <core:Icon src="sap-icon://bell" color="#ffffff" class="sapUiMediumMarginEnd bellIcon" />
+                <Text text="AJ" class="avatarIcon sapUiSmallMarginEnd" />
+            </tnt:ToolHeader>
+        </tnt:header>
+        
+        <!-- Sidebar -->
+        <tnt:sideContent>
+            <tnt:SideNavigation id="sideNavigation" itemSelect=".onSideNavSelect">
+                <tnt:NavigationList>
+                    <tnt:NavigationListItem key="dashboard" text="Dashboard" icon="sap-icon://bbyd-dashboard" />
+                    <tnt:NavigationListItem key="inventory" text="Inventory" icon="sap-icon://inventory" />
+                    <tnt:NavigationListItem key="analytics" text="Analytics" icon="sap-icon://business-objects-experience" />
+                    <tnt:NavigationListItem key="settings" text="Settings" icon="sap-icon://action-settings" />
+                </tnt:NavigationList>
+            </tnt:SideNavigation>
+        </tnt:sideContent>
+        
+        <!-- Main Content -->
+        <tnt:mainContents>
+            <NavContainer id="pageContainer">
+                <pages>
+                    <!-- Page 1: Dashboard -->
+                    <Page id="dashboard" showHeader="false">
+                        <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
+                            <VBox class="dashboardContainer">
+                            
+                            <!-- KPI Strip -->
+                            <HBox width="100%" class="sapUiSmallMarginBottom">
+                                <VBox class="kpiTile sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Items tracked" class="kpiLabel" />
+                                    <Title text="50" class="kpiValue" />
+                                </VBox>
+                                <VBox class="kpiTile sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Avg forecast accuracy" class="kpiLabel" />
+                                    <Title text="87.1%" class="kpiValue" />
+                                </VBox>
+                                <VBox class="kpiTile sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Active reorder alerts" class="kpiLabel" />
+                                    <Title text="{/reorderAlertsCount}" class="kpiValue" />
+                                </VBox>
+                                <VBox class="kpiTile">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Last updated" class="kpiLabel" />
+                                    <Title id="lastUpdatedKpi" text="Just now" class="kpiValue" />
+                                </VBox>
+                            </HBox>
+
+                            <!-- Reorder Alert Banner -->
+                            <HBox class="alertBanner sapUiSmallMarginBottom" alignItems="Center">
+                                <core:Icon src="sap-icon://alert" color="#d97706" class="sapUiSmallMarginEnd" />
+                                <Text text="{/reorderAlertsCount} items are predicted to run low on stock this week — review recommended." class="alertText" />
+                            </HBox>
+
+                            <!-- Input Row -->
+                            <Panel class="cardPanel sapUiSmallMarginBottom">
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" width="100%">
+                                    <HBox alignItems="Center">
+                                        <Label text="Store:" class="sapUiSmallMarginEnd" />
+                                        <Select id="inputStore" selectedKey="{/store}" width="120px" class="sapUiMediumMarginEnd">
+                                            <core:Item key="1" text="Store 1" />
+                                            <core:Item key="2" text="Store 2" />
+                                            <core:Item key="3" text="Store 3" />
+                                            <core:Item key="4" text="Store 4" />
+                                        </Select>
+                                        
+                                        <Label text="Item:" class="sapUiSmallMarginEnd" />
+                                        <Select id="inputItem" selectedKey="{/item}" width="120px" class="sapUiMediumMarginEnd">
+                                            <core:Item key="10" text="Item 10" />
+                                            <core:Item key="15" text="Item 15" />
+                                            <core:Item key="20" text="Item 20" />
+                                            <core:Item key="25" text="Item 25" />
+                                        </Select>
+                                        
+                                        <Label text="Forecast Date:" class="sapUiSmallMarginEnd" />
+                                        <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="150px" class="sapUiMediumMarginEnd" />
+                                    </HBox>
+                                    <Button text="Get Forecast" type="Emphasized" press=".onGetForecast" busy="{/isBusy}" />
+                                </HBox>
+                            </Panel>
+                            
+                            <!-- Two Column Layout (Chart + Results) -->
+                            <HBox width="100%" class="sapUiSmallMarginBottom">
+                                <!-- Left Column: Chart -->
+                                <VBox class="sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="7" baseSize="0%" /></layoutData>
+                                    <Panel class="cardPanel" height="100%">
+                                        <Text text="Actual vs Forecasted Sales" class="cardTitle sapUiSmallMarginBottom" />
+                                        <core:HTML content="&lt;div style='height:350px; width:100%; position:relative; margin-top:1rem; z-index:1;'&gt;&lt;canvas id='forecastChart' style='position:absolute; left:0; top:0; width:100%; height:100%;'&gt;&lt;/canvas&gt;&lt;/div&gt;" />
+                                    </Panel>
+                                </VBox>
+                                
+                                <!-- Right Column: Result Cards -->
+                                <VBox>
+                                    <layoutData><FlexItemData growFactor="3" baseSize="0%" /></layoutData>
+                                    <VBox class="highlightCard blueTint sapUiSmallMarginBottom" width="100%">
+                                        <Text text="Forecasted demand" class="cardTitle blueText" />
+                                        <HBox alignItems="Center" justifyContent="SpaceBetween">
+                                            <Title id="resultText" text="{/forecastResult}" class="highlightValue blueText" />
+                                            <BusyIndicator visible="{/isBusy}" />
+                                        </HBox>
+                                    </VBox>
+                                    
+                                    <VBox class="highlightCard tealTint" width="100%">
+                                        <Text text="Model accuracy (MAPE)" class="cardTitle tealText" />
+                                        <Title text="12.9%" class="highlightValue tealText" />
+                                    </VBox>
+                                </VBox>
+                            </HBox>
+                            
+                            <!-- Top Forecasted Items Table -->
+                            <Panel class="cardPanel sapUiSmallMarginBottom">
+                                <Text text="Items Requiring Reorder (Top 10 Critical)" class="cardTitle sapUiSmallMarginBottom" />
+                                <Table items="{/reorderAlerts}" noDataText="No critical reorders needed">
+                                    <columns>
+                                        <Column>
+                                            <Text text="Location / Item" />
+                                        </Column>
+                                        <Column hAlign="End">
+                                            <Text text="Current Stock" />
+                                        </Column>
+                                        <Column hAlign="Center">
+                                            <Text text="Safety Stock" />
+                                        </Column>
+                                        <Column hAlign="Center">
+                                            <Text text="Status" />
+                                        </Column>
+                                    </columns>
+                                    <items>
+                                        <ColumnListItem>
+                                            <cells>
+                                                <Text text="Store {store} — Item {item}" />
+                                                <Text text="{currentStock} units" />
+                                                <Text text="{safetyStock} units" />
+                                                <ObjectStatus text="{statusText}" state="{trendColor}" icon="{trendIcon}" />
+                                            </cells>
+                                        </ColumnListItem>
+                                    </items>
+                                </Table>
+                            </Panel>
+                            
+                            <!-- Bottom Stat Tiles Row -->
+                            <HBox width="100%">
+                                <VBox class="statTile sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Baseline" class="tileTitle" />
+                                    <Title text="27.9%" class="tileValue" />
+                                    <Text text="MAPE" class="tileMetric" />
+                                </VBox>
+                                <VBox class="statTile sapUiSmallMarginEnd">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="Prophet" class="tileTitle" />
+                                    <Title text="17.0%" class="tileValue" />
+                                    <Text text="MAPE" class="tileMetric" />
+                                </VBox>
+                                <VBox class="statTile activeTile">
+                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                    <Text text="XGBoost" class="tileTitle" />
+                                    <Title text="12.9%" class="tileValue" />
+                                    <Text text="MAPE" class="tileMetric" />
+                                </VBox>
+                            </HBox>
+
+                        </VBox>
+                    </ScrollContainer>
+                    </Page>
+                    
+                    <!-- Page 2: Inventory Placeholder -->
+                    <Page id="inventory" showHeader="false">
+                        <VBox justifyContent="Center" alignItems="Center" height="100%" class="mainContentBg">
+                            <core:Icon src="sap-icon://inventory" size="4rem" color="#cbd5e1" class="sapUiMediumMarginBottom" />
+                            <Title text="Inventory Management" level="H2" class="sapUiSmallMarginBottom" />
+                            <Text text="This module will connect to SAP EWM in Phase 4." />
+                        </VBox>
+                    </Page>
+                    
+                    <!-- Page 3: Analytics Placeholder -->
+                    <Page id="analytics" showHeader="false">
+                        <VBox justifyContent="Center" alignItems="Center" height="100%" class="mainContentBg">
+                            <core:Icon src="sap-icon://business-objects-experience" size="4rem" color="#cbd5e1" class="sapUiMediumMarginBottom" />
+                            <Title text="Advanced Analytics" level="H2" class="sapUiSmallMarginBottom" />
+                            <Text text="Custom reporting dashboards will be available here." />
+                        </VBox>
+                    </Page>
+
+                    <!-- Page 4: Settings Placeholder -->
+                    <Page id="settings" showHeader="false">
+                        <VBox justifyContent="Center" alignItems="Center" height="100%" class="mainContentBg">
+                            <core:Icon src="sap-icon://action-settings" size="4rem" color="#cbd5e1" class="sapUiMediumMarginBottom" />
+                            <Title text="System Settings" level="H2" class="sapUiSmallMarginBottom" />
+                            <Text text="Configuration for ML models and API endpoints." />
+                        </VBox>
+                    </Page>
+
+                </pages>
+            </NavContainer>
+        </tnt:mainContents>
+    </tnt:ToolPage>
+</mvc:View>
