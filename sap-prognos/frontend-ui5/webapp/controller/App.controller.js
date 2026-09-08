@@ -35,7 +35,7 @@ sap.ui.define([
         
         _loadMetrics: function () {
             var oModel = this.getView().getModel();
-            fetch("http://localhost:8000/metrics")
+            fetch("https://sap-forecast.onrender.com/metrics")
                 .then(response => response.json())
                 .then(data => {
                     var xgboostMape = data.metrics["XGBoost (Full Global)"].MAPE.toFixed(1);
@@ -55,7 +55,7 @@ sap.ui.define([
         
         _loadReorderAlerts: function () {
             var oModel = this.getView().getModel();
-            fetch("http://localhost:8000/reorder-alerts")
+            fetch("https://sap-forecast.onrender.com/reorder-alerts")
                 .then(response => response.json())
                 .then(data => {
                     oModel.setProperty("/reorderAlertsCount", data.count);
@@ -213,7 +213,7 @@ sap.ui.define([
             
             // Wait a bit to simulate network delay so the busy indicator is visible
             setTimeout(function() {
-                fetch("http://localhost:8000/forecast", {
+                fetch("https://sap-forecast.onrender.com/forecast", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
@@ -264,7 +264,7 @@ sap.ui.define([
                 high_seasonality: oModel.getProperty("/simSeasonality")
             };
             
-            fetch("http://localhost:8000/simulate", {
+            fetch("https://sap-forecast.onrender.com/simulate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -334,7 +334,7 @@ sap.ui.define([
                 ]
             };
             
-            fetch("http://localhost:8000/anomalies", {
+            fetch("https://sap-forecast.onrender.com/anomalies", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
