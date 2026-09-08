@@ -31,10 +31,11 @@ def test_reorder_alerts():
     response = client.get("/reorder-alerts")
     assert response.status_code == 200
     data = response.json()
-    assert isinstance(data, list)
-    if len(data) > 0:
-        assert "risk" in data[0]
-        assert "store" in data[0]
+    assert isinstance(data, dict)
+    assert "alerts" in data
+    if len(data["alerts"]) > 0:
+        assert "risk" in data["alerts"][0]
+        assert "store" in data["alerts"][0]
 
 def test_forecast_endpoint():
     payload = {
@@ -66,6 +67,6 @@ def test_simulate_endpoint():
     response = client.post("/simulate", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert "simulated_forecast" in data
+    assert "adjusted_forecast" in data
     assert "base_forecast" in data
-    assert data["simulated_forecast"] > data["base_forecast"]
+    assert data["adjusted_forecast"] > data["base_forecast"]

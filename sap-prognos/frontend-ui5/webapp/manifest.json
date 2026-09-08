@@ -38,6 +38,38 @@
       "": {
         "type": "sap.ui.model.json.JSONModel"
       }
+    },
+    "routing": {
+      "config": {
+        "routerClass": "sap.m.routing.Router",
+        "viewType": "XML",
+        "viewPath": "sap.prognos.view",
+        "controlId": "app",
+        "controlAggregation": "pages",
+        "async": true
+      },
+      "routes": [
+        {
+          "pattern": "",
+          "name": "login",
+          "target": "login"
+        },
+        {
+          "pattern": "main",
+          "name": "main",
+          "target": "main"
+        }
+      ],
+      "targets": {
+        "login": {
+          "viewId": "login",
+          "viewName": "Login"
+        },
+        "main": {
+          "viewId": "main",
+          "viewName": "Main"
+        }
+      }
     }
   }
 }

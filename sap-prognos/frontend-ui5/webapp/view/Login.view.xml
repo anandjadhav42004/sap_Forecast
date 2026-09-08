@@ -1,0 +1,33 @@
+<mvc:View
+    controllerName="sap.prognos.controller.Login"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns="sap.m"
+    xmlns:core="sap.ui.core"
+    displayBlock="true">
+    
+    <Page showHeader="false" class="mainContentBg">
+        <VBox justifyContent="Center" alignItems="Center" height="100%" width="100%">
+            <Panel width="400px" class="cardPanel sapUiMediumMargin">
+                <VBox alignItems="Center" class="sapUiMediumMarginBottom">
+                    <core:Icon src="sap-icon://line-chart" size="3rem" color="#38bdf8" class="sapUiSmallMarginBottom" />
+                    <Title text="SAP Prognos" level="H1" class="headerTitle sapUiSmallMarginBottom" />
+                    <Text text="Enterprise Demand Forecasting" class="sapUiSmallMarginBottom" />
+                </VBox>
+                
+                <VBox width="100%">
+                    <Label text="Username" />
+                    <Input id="usernameInput" placeholder="Enter username (admin or user)" value="{/username}" class="sapUiSmallMarginBottom" submit=".onLogin" />
+                    
+                    <Label text="Password" />
+                    <Input id="passwordInput" placeholder="Enter password (admin or user)" type="Password" value="{/password}" class="sapUiMediumMarginBottom" submit=".onLogin" />
+                    
+                    <Button text="Log In" type="Emphasized" press=".onLogin" width="100%" class="sapUiSmallMarginBottom" />
+                </VBox>
+                
+                <HBox justifyContent="Center" class="sapUiSmallMarginTop">
+                    <Text text="Demo Roles: admin/admin or user/user" class="sapUiTinyMarginTop" style="color: #64748b; font-size: 0.8rem;" />
+                </HBox>
+            </Panel>
+        </VBox>
+    </Page>
+</mvc:View>
