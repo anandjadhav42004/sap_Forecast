@@ -70,3 +70,25 @@ def test_simulate_endpoint():
     assert "adjusted_forecast" in data
     assert "base_forecast" in data
     assert data["adjusted_forecast"] > data["base_forecast"]
+
+def test_anomalies_endpoint():
+    payload = {
+        "store": 1,
+        "item": 1,
+        "historical_sales": [
+            {"date": "2023-01-01", "sales": 10},
+            {"date": "2023-01-02", "sales": 11},
+            {"date": "2023-01-03", "sales": 10},
+            {"date": "2023-01-04", "sales": 12},
+            {"date": "2023-01-05", "sales": 9},
+            {"date": "2023-01-06", "sales": 100}, # Spike!
+            {"date": "2023-01-07", "sales": 11}
+        ]
+    }
+    response = client.post("/anomalies", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "anomalies_detected" in data
+    assert data["anomalies_detected"] > 0
+    assert "anomalies" in data
+    assert data["anomalies"][0]["actual_sales"] == 100

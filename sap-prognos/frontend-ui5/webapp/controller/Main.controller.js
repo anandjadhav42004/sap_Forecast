@@ -11,6 +11,9 @@ sap.ui.define([
                 store: 2,
                 item: 10,
                 date: "2018-01-01",
+                salesLag1: 41.0,
+                salesLag7: 45.0,
+                salesRollMean7: 41.7,
                 forecastResult: "---",
                 isBusy: false,
                 reorderAlertsCount: 0,
@@ -39,9 +42,17 @@ sap.ui.define([
             this._loadReorderAlerts();
         },
         
+        _getApiBaseUrl: function () {
+            // Use local backend for localhost dev, otherwise use Render production URL
+            if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                return "http://localhost:8000";
+            }
+            return "https://sap-forecast.onrender.com";
+        },
+        
         _loadMetrics: function () {
             var oModel = this.getView().getModel();
-            fetch("https://sap-forecast.onrender.com/metrics")
+            fetch(this._getApiBaseUrl() + "/metrics")
                 .then(response => response.json())
                 .then(data => {
                     var xgboostMape = data.metrics["XGBoost (Full Global)"].MAPE.toFixed(1);
@@ -61,7 +72,7 @@ sap.ui.define([
         
         _loadReorderAlerts: function () {
             var oModel = this.getView().getModel();
-            fetch("https://sap-forecast.onrender.com/reorder-alerts")
+            fetch(this._getApiBaseUrl() + "/reorder-alerts")
                 .then(response => response.json())
                 .then(data => {
                     oModel.setProperty("/reorderAlertsCount", data.count);
@@ -212,14 +223,14 @@ sap.ui.define([
                 store: store,
                 item: item,
                 date: date,
-                sales_lag_1: 41.0,
-                sales_lag_7: 45.0,
-                sales_roll_mean_7: 41.7
+                sales_lag_1: parseFloat(oModel.getProperty("/salesLag1")) || 0,
+                sales_lag_7: parseFloat(oModel.getProperty("/salesLag7")) || 0,
+                sales_roll_mean_7: parseFloat(oModel.getProperty("/salesRollMean7")) || 0
             };
             
             // Wait a bit to simulate network delay so the busy indicator is visible
             setTimeout(function() {
-                fetch("https://sap-forecast.onrender.com/forecast", {
+                fetch(this._getApiBaseUrl() + "/forecast", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(payload)
@@ -270,7 +281,7 @@ sap.ui.define([
                 high_seasonality: oModel.getProperty("/simSeasonality")
             };
             
-            fetch("https://sap-forecast.onrender.com/simulate", {
+            fetch(this._getApiBaseUrl() + "/simulate", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -340,7 +351,7 @@ sap.ui.define([
                 ]
             };
             
-            fetch("https://sap-forecast.onrender.com/anomalies", {
+            fetch(this._getApiBaseUrl() + "/anomalies", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)

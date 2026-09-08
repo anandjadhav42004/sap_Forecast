@@ -95,8 +95,18 @@
                                         <Label text="Forecast Date:" class="sapUiSmallMarginEnd" />
                                         <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="150px" class="sapUiMediumMarginEnd" />
                                     </HBox>
+                                    <HBox alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
+                                        <Label text="Sales Lag 1:" class="sapUiSmallMarginEnd" tooltip="Sales from 1 day ago" />
+                                        <Input value="{/salesLag1}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                        
+                                        <Label text="Sales Lag 7:" class="sapUiSmallMarginEnd" tooltip="Sales from 7 days ago" />
+                                        <Input value="{/salesLag7}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                        
+                                        <Label text="7-Day Rolling Mean:" class="sapUiSmallMarginEnd" tooltip="Average sales over the last 7 days" />
+                                        <Input value="{/salesRollMean7}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                    </HBox>
                                     <Button text="Get Forecast" type="Emphasized" press=".onGetForecast" busy="{/isBusy}" />
-                                </HBox>
+                                </VBox>
                             </Panel>
                             
                             <!-- Two Column Layout (Chart + Results) -->
