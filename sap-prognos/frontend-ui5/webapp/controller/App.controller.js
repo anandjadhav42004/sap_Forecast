@@ -14,12 +14,43 @@ sap.ui.define([
                 forecastResult: "---",
                 isBusy: false,
                 reorderAlertsCount: 0,
-                reorderAlerts: []
+                reorderAlerts: [],
+                explainability: [],
+                simStore: 2,
+                simItem: 10,
+                simDemandAdjust: 20,
+                simPromotion: true,
+                simSeasonality: true,
+                simCurrentForecast: "---",
+                simSimulatedForecast: "---",
+                simInventoryImpact: 0,
+                simRecommendedOrder: 0
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel);
             
+            this._loadMetrics();
             this._loadReorderAlerts();
+        },
+        
+        _loadMetrics: function () {
+            var oModel = this.getView().getModel();
+            fetch("http://localhost:8000/metrics")
+                .then(response => response.json())
+                .then(data => {
+                    var xgboostMape = data.metrics["XGBoost (Full Global)"].MAPE.toFixed(1);
+                    var prophetMape = data.metrics["Prophet (Sampled)"].MAPE.toFixed(1);
+                    var baselineMape = data.metrics["Baseline (7-Day MA)"].MAPE.toFixed(1);
+                    
+                    oModel.setProperty("/accuracyMape", xgboostMape + "%");
+                    oModel.setProperty("/accuracyAccuracy", (100 - parseFloat(xgboostMape)).toFixed(1) + "%");
+                    oModel.setProperty("/prophetMape", prophetMape + "%");
+                    oModel.setProperty("/baselineMape", baselineMape + "%");
+                })
+                .catch(err => {
+                    console.error("Failed to fetch metrics", err);
+                    oModel.setProperty("/accuracyAccuracy", "---%");
+                });
         },
         
         _loadReorderAlerts: function () {
@@ -50,7 +81,7 @@ sap.ui.define([
             setTimeout(this._setupChart.bind(this), 200);
         },
         
-        _setupChart: function (forecastVal) {
+        _setupChart: function (forecastVal, confLower, confUpper) {
             var canvas = document.getElementById("forecastChart");
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
@@ -90,8 +121,8 @@ sap.ui.define([
                 var forecastDataset = [null, null, null, null, null, null, lastHistorical, forecastVal];
                 
                 // Confidence bounds (start from last historical point)
-                var upperBound = [null, null, null, null, null, null, lastHistorical, forecastVal * 1.1];
-                var lowerBound = [null, null, null, null, null, null, lastHistorical, forecastVal * 0.9];
+                var upperBound = [null, null, null, null, null, null, lastHistorical, confUpper || (forecastVal * 1.1)];
+                var lowerBound = [null, null, null, null, null, null, lastHistorical, confLower || (forecastVal * 0.9)];
                 
                 datasets.push({
                     label: 'Upper Bound',
@@ -197,11 +228,13 @@ sap.ui.define([
                     // Parse float and fix to 1 decimal place
                     var formattedResult = parseFloat(data.forecasted_sales).toFixed(1) + " units";
                     oModel.setProperty("/forecastResult", formattedResult);
+                    oModel.setProperty("/explainability", data.explainability);
+                    this._setupChart(data.forecasted_sales, data.confidence_lower, data.confidence_upper);
                     oModel.setProperty("/lastUpdated", new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
                     this.byId("lastUpdatedKpi").setText(oModel.getProperty("/lastUpdated"));
                     
                     // Update Chart
-                    this._setupChart(data.forecasted_sales);
+                    // already called above
                     
                     MessageToast.show("Forecast generated successfully.");
                 })
@@ -214,6 +247,43 @@ sap.ui.define([
             }.bind(this), 300);
         },
 
+        
+        onRunSimulation: function () {
+            var oModel = this.getView().getModel();
+            oModel.setProperty("/isBusy", true);
+            
+            var payload = {
+                store: parseInt(oModel.getProperty("/simStore")),
+                item: parseInt(oModel.getProperty("/simItem")),
+                date: "2018-01-01",
+                sales_lag_1: 41.0,
+                sales_lag_7: 45.0,
+                sales_roll_mean_7: 41.7,
+                demand_adjustment_pct: parseFloat(oModel.getProperty("/simDemandAdjust")),
+                is_promotion: oModel.getProperty("/simPromotion"),
+                high_seasonality: oModel.getProperty("/simSeasonality")
+            };
+            
+            fetch("http://localhost:8000/simulate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                oModel.setProperty("/isBusy", false);
+                oModel.setProperty("/simCurrentForecast", data.current_forecast + " units");
+                oModel.setProperty("/simSimulatedForecast", data.simulated_forecast + " units");
+                oModel.setProperty("/simInventoryImpact", data.inventory_impact_units);
+                oModel.setProperty("/simRecommendedOrder", data.recommended_order);
+                MessageToast.show("Simulation complete.");
+            })
+            .catch(error => {
+                oModel.setProperty("/isBusy", false);
+                MessageToast.show("Simulation failed.");
+            });
+        },
+
         onSideNavSelect: function (oEvent) {
             var sKey = oEvent.getParameter("item").getKey();
             this.byId("pageContainer").to(this.byId(sKey));
@@ -223,6 +293,63 @@ sap.ui.define([
             var oSideNavigation = this.byId("sideNavigation");
             var bExpanded = oSideNavigation.getExpanded();
             oSideNavigation.setExpanded(!bExpanded);
+        },
+        
+        onInventorySearch: function (oEvent) {
+            var sQuery = oEvent.getParameter("newValue");
+            var oTable = this.byId("inventoryTable");
+            var oBinding = oTable.getBinding("items");
+            var aFilters = [];
+            
+            if (sQuery && sQuery.length > 0) {
+                var filterStore = new sap.ui.model.Filter("store", sap.ui.model.FilterOperator.EQ, parseInt(sQuery) || -1);
+                var filterItem = new sap.ui.model.Filter("item", sap.ui.model.FilterOperator.EQ, parseInt(sQuery) || -1);
+                var filterRisk = new sap.ui.model.Filter("risk", sap.ui.model.FilterOperator.Contains, sQuery.toUpperCase());
+                
+                aFilters.push(new sap.ui.model.Filter({
+                    filters: [filterStore, filterItem, filterRisk],
+                    and: false
+                }));
+            }
+            oBinding.filter(aFilters);
+        },
+        
+        onRunAnomalies: function () {
+            var oModel = this.getView().getModel();
+            oModel.setProperty("/isBusyAnomalies", true);
+            
+            // Mocking historical payload
+            var payload = {
+                store: 2,
+                item: 10,
+                historical_sales: [
+                    {date: "2017-12-01", sales: 40},
+                    {date: "2017-12-02", sales: 42},
+                    {date: "2017-12-03", sales: 45},
+                    {date: "2017-12-04", sales: 41},
+                    {date: "2017-12-05", sales: 38},
+                    {date: "2017-12-06", sales: 120}, // Spike anomaly
+                    {date: "2017-12-07", sales: 44},
+                    {date: "2017-12-08", sales: 10}  // Dip anomaly
+                ]
+            };
+            
+            fetch("http://localhost:8000/anomalies", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                oModel.setProperty("/isBusyAnomalies", false);
+                oModel.setProperty("/anomalies", data.anomalies);
+                oModel.setProperty("/anomaliesCount", data.anomalies_detected);
+                MessageToast.show("Anomaly scan complete.");
+            })
+            .catch(error => {
+                oModel.setProperty("/isBusyAnomalies", false);
+                MessageToast.show("Failed to run anomaly scan.");
+            });
         }
     });
 });

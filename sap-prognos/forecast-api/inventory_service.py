@@ -20,12 +20,49 @@ def get_inventory(store: int, item: int):
 def get_all_reorder_alerts():
     conn = get_db_connection()
     cursor = conn.cursor()
-    # The condition for reorder: if forecasted_demand (avg_daily_demand) > (current_stock - safety_stock)
-    cursor.execute('''
-        SELECT * FROM inventory 
-        WHERE avg_daily_demand > (current_stock - safety_stock)
-        ORDER BY (current_stock - safety_stock - avg_daily_demand) ASC
-    ''')
+    # Fetch all inventory to categorize
+    cursor.execute('SELECT * FROM inventory')
     rows = cursor.fetchall()
     conn.close()
-    return [dict(row) for row in rows]
+    
+    alerts = []
+    for row in rows:
+        inv = dict(row)
+        current_stock = inv['current_stock']
+        avg_demand = inv['avg_daily_demand']
+        lead_time = inv['lead_time_days']
+        reorder_point = inv['reorder_point']
+        target_stock = inv['target_stock']
+        safety_stock = inv['safety_stock']
+        incoming = inv['incoming_stock']
+        
+        # Calculate risk levels
+        projected_demand_during_lt = avg_demand * lead_time
+        available_stock = current_stock + incoming
+        
+        days_of_cover = round(available_stock / avg_demand, 1) if avg_demand > 0 else 999
+        
+        if available_stock <= projected_demand_during_lt:
+            risk = "CRITICAL" # Stockout likely within lead time
+            risk_score = 4
+        elif available_stock <= reorder_point:
+            risk = "HIGH" # Below reorder point
+            risk_score = 3
+        elif available_stock <= (reorder_point * 1.2):
+            risk = "MEDIUM" # Approaching reorder point
+            risk_score = 2
+        else:
+            continue # NORMAL - we don't alert
+            
+        recommended_order = max(0, target_stock - available_stock)
+            
+        inv['risk'] = risk
+        inv['risk_score'] = risk_score
+        inv['days_of_cover'] = days_of_cover
+        inv['recommended_order'] = recommended_order
+        alerts.append(inv)
+        
+    # Sort critical first, then by days of cover (lowest first)
+    alerts.sort(key=lambda x: (-x['risk_score'], x['days_of_cover']))
+    
+    return alerts

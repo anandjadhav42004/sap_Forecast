@@ -20,6 +20,10 @@ def setup_database():
         current_stock INTEGER,
         safety_stock INTEGER,
         avg_daily_demand INTEGER,
+        lead_time_days INTEGER,
+        reorder_point INTEGER,
+        target_stock INTEGER,
+        incoming_stock INTEGER,
         last_updated TIMESTAMP,
         PRIMARY KEY (store, item)
     )
@@ -33,27 +37,35 @@ def setup_database():
         for item in range(1, 51):
             # Realistic randoms
             avg_daily_demand = random.randint(15, 90)
-            # Safety stock is roughly 1.5x daily demand (e.g. lead time padding)
-            safety_stock = int(avg_daily_demand * 1.5)
+            lead_time_days = random.randint(1, 5) # 1 to 5 days lead time
+            
+            # Safety stock is typically (Max Demand * Max Lead Time) - (Avg Demand * Avg Lead Time)
+            # We'll use a simpler heuristic for the prototype: pad average lead time demand by 50%
+            safety_stock = int(avg_daily_demand * lead_time_days * 0.5)
+            
+            # Reorder Point = Demand during lead time + Safety Stock
+            reorder_point = int((avg_daily_demand * lead_time_days) + safety_stock)
+            
+            # Target Stock = Reorder Point + Reorder Quantity (let's assume roughly 14 days of supply)
+            target_stock = int(reorder_point + (avg_daily_demand * 14))
             
             # Most items have plenty of stock, but ~10-15% will fall below threshold
-            # Threshold for alert is: avg_daily_demand > (current_stock - safety_stock)
-            # which means current_stock < avg_daily_demand + safety_stock
-            
             if random.random() < 0.15:
-                # Force low stock
-                current_stock = random.randint(0, safety_stock + avg_daily_demand - 1)
+                # Force low/critical stock (below reorder point)
+                current_stock = random.randint(0, reorder_point - 1)
+                incoming_stock = 0 if random.random() < 0.5 else random.randint(10, 50)
             else:
                 # Healthy stock
-                current_stock = random.randint(safety_stock + avg_daily_demand, avg_daily_demand * 10)
+                current_stock = random.randint(reorder_point + 1, target_stock)
+                incoming_stock = 0
                 
             last_updated = datetime.now()
             
-            rows.append((store, item, current_stock, safety_stock, avg_daily_demand, last_updated))
+            rows.append((store, item, current_stock, safety_stock, avg_daily_demand, lead_time_days, reorder_point, target_stock, incoming_stock, last_updated))
             
     cursor.executemany('''
-    INSERT INTO inventory (store, item, current_stock, safety_stock, avg_daily_demand, last_updated)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO inventory (store, item, current_stock, safety_stock, avg_daily_demand, lead_time_days, reorder_point, target_stock, incoming_stock, last_updated)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', rows)
     
     conn.commit()
