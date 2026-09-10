@@ -41,7 +41,14 @@ app.add_middleware(
 )
 
 # Load environment variables
-MODEL_PATH = os.getenv("MODEL_PATH", os.path.join(os.path.dirname(__file__), '..', 'models', 'xgboost_model.json'))
+_DEFAULT_MODEL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "models", "xgboost_model.json")
+env_model_path = os.getenv("MODEL_PATH")
+if env_model_path and os.path.isabs(env_model_path):
+    MODEL_PATH = env_model_path
+elif env_model_path:
+    MODEL_PATH = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), env_model_path))
+else:
+    MODEL_PATH = _DEFAULT_MODEL_PATH
 CONFIDENCE_LEVEL = float(os.getenv("CONFIDENCE_LEVEL", "0.85"))
 
 # Load model on startup
@@ -152,8 +159,11 @@ def get_forecast(req: ForecastRequest):
             "item": req.item,
             "forecast_date": req.date,
             "predicted_demand": round(prediction, 2),
+            "forecasted_sales": round(prediction, 2),
             "lower_bound": lower_bound,
+            "confidence_lower": lower_bound,
             "upper_bound": upper_bound,
+            "confidence_upper": upper_bound,
             "confidence_level": CONFIDENCE_LEVEL,
             "model": "XGBoost",
             "model_version": "1.0.0",
@@ -291,9 +301,12 @@ def simulate_forecast(req: SimulationRequest):
             "item": req.item,
             "date": req.date,
             "base_forecast": round(base_prediction, 2),
+            "current_forecast": round(base_prediction, 2),
             "adjusted_forecast": round(simulated_prediction, 2),
+            "simulated_forecast": round(simulated_prediction, 2),
             "current_stock": current_stock if inv else 0,
             "shortage": int(abs(inventory_impact)) if inventory_impact < 0 else 0,
+            "inventory_impact_units": inventory_impact,
             "recommended_order": recommended_order,
             "risk": risk_level
         }
@@ -393,7 +406,7 @@ def root():
 @app.get("/metrics")
 def get_metrics():
     import json
-    metrics_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'model_comparison.json')
+    metrics_path = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'models', 'model_comparison.json'))
     try:
         with open(metrics_path, 'r') as f:
             data = json.load(f)

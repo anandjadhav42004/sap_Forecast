@@ -18,6 +18,7 @@ sap.ui.define([
                 isBusy: false,
                 reorderAlertsCount: 0,
                 reorderAlerts: [],
+                fullInventory: [],
                 explainability: [],
                 simStore: 2,
                 simItem: 10,
@@ -27,19 +28,62 @@ sap.ui.define([
                 simCurrentForecast: "---",
                 simSimulatedForecast: "---",
                 simInventoryImpact: 0,
-                simRecommendedOrder: 0
+                simRecommendedOrder: 0,
+                anomalies: [],
+                anomaliesCount: 0,
+                backendStatus: "Checking...",
+                backendStatusState: "None",
+                backendModelLoaded: "---",
+                backendDbConnected: "---",
+                backendVersion: "1.0.0"
             };
             var oModel = new JSONModel(oData);
             this.getView().setModel(oModel);
             
-            // Bind the global session model to this view
-            var oSessionModel = sap.ui.getCore().getModel("session");
-            if (oSessionModel) {
-                this.getView().setModel(oSessionModel, "session");
+            // Restore or bind the global session model to this view
+            var oCore = sap.ui.getCore();
+            var oSessionModel = oCore.getModel("session");
+            var sSavedSession = localStorage.getItem("sap_prognos_session");
+            var oSessionData = { 
+                role: "guest", 
+                username: "",
+                fullName: "Guest",
+                roleName: "Guest",
+                email: "",
+                avatarText: "--"
+            };
+            if (sSavedSession) {
+                try {
+                    oSessionData = JSON.parse(sSavedSession);
+                } catch (e) {
+                    localStorage.removeItem("sap_prognos_session");
+                }
             }
+            
+            // Ensure helper fields exist even if an older session was saved
+            if (oSessionData.role === "admin") {
+                oSessionData.fullName = oSessionData.fullName || "Anand Jadhav";
+                oSessionData.roleName = oSessionData.roleName || "Administrator";
+                oSessionData.email = oSessionData.email || "anand.jadhav@sap-prognos.internal";
+                oSessionData.avatarText = oSessionData.avatarText || "AJ";
+            } else if (oSessionData.role === "user") {
+                oSessionData.fullName = oSessionData.fullName || "Demo User";
+                oSessionData.roleName = oSessionData.roleName || "Viewer (Read-Only)";
+                oSessionData.email = oSessionData.email || "demo.viewer@sap-prognos.internal";
+                oSessionData.avatarText = oSessionData.avatarText || "DU";
+            }
+
+            if (!oSessionModel) {
+                oSessionModel = new JSONModel(oSessionData);
+                oCore.setModel(oSessionModel, "session");
+            } else if (oSessionData.role !== "guest") {
+                oSessionModel.setData(oSessionData);
+            }
+            this.getView().setModel(oSessionModel, "session");
             
             this._loadMetrics();
             this._loadReorderAlerts();
+            this._loadHealth();
         },
         
         _getApiBaseUrl: function () {
@@ -76,7 +120,12 @@ sap.ui.define([
                 .then(response => response.json())
                 .then(data => {
                     oModel.setProperty("/reorderAlertsCount", data.count);
-                    var alerts = data.alerts.slice(0, 10).map(function(alert) {
+                    
+                    // Full raw alerts list for the separate Master Inventory page
+                    oModel.setProperty("/fullInventory", data.alerts || []);
+                    
+                    // Top-10 trimmed list formatted specifically for the Dashboard table
+                    var alerts = (data.alerts || []).slice(0, 10).map(function(alert) {
                         var isCritical = alert.current_stock < (alert.safety_stock * 0.5);
                         return {
                             store: alert.store,
@@ -85,7 +134,7 @@ sap.ui.define([
                             safetyStock: alert.safety_stock,
                             statusText: isCritical ? "Critical" : "Low",
                             trendIcon: isCritical ? "sap-icon://error" : "sap-icon://warning2",
-                            trendColor: isCritical ? "Error" : "Critical"
+                            trendColor: isCritical ? "Error" : "Warning"
                         };
                     });
                     oModel.setProperty("/reorderAlerts", alerts);
@@ -242,16 +291,17 @@ sap.ui.define([
                 .then(data => {
                     oModel.setProperty("/isBusy", false);
                     
+                    var predictedVal = (data.predicted_demand !== undefined) ? data.predicted_demand : data.forecasted_sales;
+                    var lowerVal = (data.lower_bound !== undefined) ? data.lower_bound : data.confidence_lower;
+                    var upperVal = (data.upper_bound !== undefined) ? data.upper_bound : data.confidence_upper;
+
                     // Parse float and fix to 1 decimal place
-                    var formattedResult = parseFloat(data.forecasted_sales).toFixed(1) + " units";
+                    var formattedResult = parseFloat(predictedVal).toFixed(1) + " units";
                     oModel.setProperty("/forecastResult", formattedResult);
                     oModel.setProperty("/explainability", data.explainability);
-                    this._setupChart(data.forecasted_sales, data.confidence_lower, data.confidence_upper);
+                    this._setupChart(predictedVal, lowerVal, upperVal);
                     oModel.setProperty("/lastUpdated", new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
                     this.byId("lastUpdatedKpi").setText(oModel.getProperty("/lastUpdated"));
-                    
-                    // Update Chart
-                    // already called above
                     
                     MessageToast.show("Forecast generated successfully.");
                 })
@@ -289,10 +339,14 @@ sap.ui.define([
             .then(response => response.json())
             .then(data => {
                 oModel.setProperty("/isBusy", false);
-                oModel.setProperty("/simCurrentForecast", data.current_forecast + " units");
-                oModel.setProperty("/simSimulatedForecast", data.simulated_forecast + " units");
-                oModel.setProperty("/simInventoryImpact", data.inventory_impact_units);
-                oModel.setProperty("/simRecommendedOrder", data.recommended_order);
+                var baseForecast = (data.base_forecast !== undefined) ? data.base_forecast : data.current_forecast;
+                var adjustedForecast = (data.adjusted_forecast !== undefined) ? data.adjusted_forecast : data.simulated_forecast;
+                var shortageVal = (data.shortage !== undefined) ? data.shortage : (data.inventory_impact_units !== undefined ? data.inventory_impact_units : 0);
+                
+                oModel.setProperty("/simCurrentForecast", (baseForecast !== undefined ? baseForecast : 0) + " units");
+                oModel.setProperty("/simSimulatedForecast", (adjustedForecast !== undefined ? adjustedForecast : 0) + " units");
+                oModel.setProperty("/simInventoryImpact", shortageVal);
+                oModel.setProperty("/simRecommendedOrder", data.recommended_order !== undefined ? data.recommended_order : 0);
                 MessageToast.show("Simulation complete.");
             })
             .catch(error => {
@@ -331,6 +385,11 @@ sap.ui.define([
             oBinding.filter(aFilters);
         },
         
+        onRefreshInventory: function () {
+            this._loadReorderAlerts();
+            MessageToast.show("Inventory refreshed.");
+        },
+        
         onRunAnomalies: function () {
             var oModel = this.getView().getModel();
             oModel.setProperty("/isBusyAnomalies", true);
@@ -367,6 +426,85 @@ sap.ui.define([
                 oModel.setProperty("/isBusyAnomalies", false);
                 MessageToast.show("Failed to run anomaly scan.");
             });
+        },
+        
+        _loadHealth: function () {
+            var oModel = this.getView().getModel();
+            fetch(this._getApiBaseUrl() + "/health")
+                .then(response => response.json())
+                .then(data => {
+                    oModel.setProperty("/backendStatus", data.status === "healthy" ? "Online / Healthy" : data.status);
+                    oModel.setProperty("/backendStatusState", data.status === "healthy" ? "Success" : "Error");
+                    oModel.setProperty("/backendModelLoaded", data.model_loaded ? "Loaded in Memory (XGBoost v1.0.0)" : "Not Loaded");
+                    oModel.setProperty("/backendDbConnected", data.database_connected ? "Connected (sqlite:///forecast.db)" : "Disconnected");
+                    oModel.setProperty("/backendVersion", data.version || "1.0.0");
+                })
+                .catch(err => {
+                    console.error("Health check failed", err);
+                    oModel.setProperty("/backendStatus", "Offline / Unreachable");
+                    oModel.setProperty("/backendStatusState", "Error");
+                    oModel.setProperty("/backendModelLoaded", "Unavailable");
+                    oModel.setProperty("/backendDbConnected", "Unavailable");
+                    oModel.setProperty("/backendVersion", "---");
+                });
+        },
+
+        onAvatarPress: function (oEvent) {
+            var oPopover = this.byId("profilePopover");
+            if (!oPopover) {
+                return;
+            }
+            if (oPopover.isOpen()) {
+                oPopover.close();
+            } else {
+                oPopover.openBy(oEvent.getSource());
+            }
+        },
+
+        onTriggerPO: function (oEvent) {
+            var oContext = oEvent.getSource().getBindingContext();
+            var sStore = oContext ? oContext.getProperty("store") : "1";
+            var sItem = oContext ? oContext.getProperty("item") : "10";
+            var sPoId = "PO-" + Math.floor(10000 + Math.random() * 90000);
+            MessageToast.show("Purchase Order " + sPoId + " triggered for Store " + sStore + " — Item " + sItem + "!");
+        },
+
+        onQuickReviewOrders: function () {
+            var oNavContainer = this.byId("pageContainer");
+            var oSideNav = this.byId("sideNavigation");
+            if (oNavContainer) {
+                oNavContainer.to(this.byId("inventory"));
+            }
+            if (oSideNav) {
+                oSideNav.setSelectedKey("inventory");
+            }
+            MessageToast.show("Navigated to Master Inventory & Reorder Management.");
+        },
+
+        onRefreshHealth: function () {
+            this._loadHealth();
+            MessageToast.show("Backend telemetry refreshed.");
+        },
+        
+        onLogout: function () {
+            var oPopover = this.byId("profilePopover");
+            if (oPopover && oPopover.isOpen()) {
+                oPopover.close();
+            }
+            localStorage.removeItem("sap_prognos_session");
+            var oGuestData = { role: "guest", username: "", fullName: "Guest", roleName: "Guest", email: "", avatarText: "--" };
+            var oOwner = this.getOwnerComponent();
+            if (oOwner && oOwner.getModel("session")) {
+                oOwner.getModel("session").setData(oGuestData);
+            }
+            if (sap.ui.getCore().getModel("session")) {
+                sap.ui.getCore().getModel("session").setData(oGuestData);
+            }
+            MessageToast.show("Logged out successfully.");
+            if (oOwner && oOwner.getRouter()) {
+                oOwner.getRouter().navTo("login");
+            }
+            window.location.hash = "#/";
         }
     });
 });

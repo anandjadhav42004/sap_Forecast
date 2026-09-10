@@ -236,3 +236,129 @@
 .sapMBtnEmphasized:hover {
     box-shadow: 0 0 25px rgba(139, 92, 246, 0.7) !important;
 }
+
+/* Avatar Button in ToolHeader */
+.avatarButton {
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%) !important;
+    border-radius: 50% !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    max-width: 36px !important;
+    padding: 0 !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.6) !important;
+    cursor: pointer !important;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.avatarButton .sapMBtnInner {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 50% !important;
+    padding: 0 !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    line-height: 32px !important;
+    text-align: center !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 0.85rem !important;
+}
+
+.avatarButton:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 16px rgba(6, 182, 212, 0.8) !important;
+}
+
+/* Header Role Status */
+.headerRoleBadge {
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+    font-size: 0.75rem !important;
+}
+
+/* Profile Popover */
+.profilePopover .sapMPopoverCont {
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5) !important;
+}
+
+.profilePopover .sapMPopoverHeader .sapMBar {
+    background: transparent !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.avatarLarge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatarLargeText {
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+}
+
+.profileEmail {
+    color: #94a3b8 !important;
+    font-size: 0.85rem !important;
+}
+
+.profileInfoBox {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 10px !important;
+    padding: 0.75rem !important;
+}
+
+.profileLabel {
+    color: #94a3b8 !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+}
+
+.profileValue {
+    color: #e2e8f0 !important;
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+}
+
+.roleSubtitle {
+    color: #64748b !important;
+    font-size: 0.85rem !important;
+    font-style: italic;
+}
+
+/* Settings Page */
+.settingsCard {
+    background: rgba(30, 41, 59, 0.5) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    height: 100%;
+}
+
+.settingsRow {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.settingsRow:last-child {
+    border-bottom: none;
+}
+

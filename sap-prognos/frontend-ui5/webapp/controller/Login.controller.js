@@ -13,10 +13,23 @@ sap.ui.define([
             });
             this.getView().setModel(oModel);
             
-            // Set up a global model for session/role if not exists
+            // Check localStorage for saved session
+            var sSavedSession = localStorage.getItem("sap_prognos_session");
+            var oSessionData = { role: "guest", username: "" };
+            if (sSavedSession) {
+                try {
+                    oSessionData = JSON.parse(sSavedSession);
+                } catch (e) {
+                    localStorage.removeItem("sap_prognos_session");
+                }
+            }
+            
+            // Set up a global model for session/role
             var oCore = sap.ui.getCore();
             if (!oCore.getModel("session")) {
-                oCore.setModel(new JSONModel({ role: "guest", username: "" }), "session");
+                oCore.setModel(new JSONModel(oSessionData), "session");
+            } else {
+                oCore.getModel("session").setData(oSessionData);
             }
         },
         
@@ -31,20 +44,46 @@ sap.ui.define([
             }
             
             var sRole = "";
+            var sFullName = "";
+            var sRoleName = "";
+            var sEmail = "";
+            var sAvatarText = "";
             if (sUser.toLowerCase() === "admin" && sPass === "admin") {
                 sRole = "admin";
+                sFullName = "Anand Jadhav";
+                sRoleName = "Administrator";
+                sEmail = "anand.jadhav@sap-prognos.internal";
+                sAvatarText = "AJ";
             } else if (sUser.toLowerCase() === "user" && sPass === "user") {
                 sRole = "user";
+                sFullName = "Demo User";
+                sRoleName = "Viewer (Read-Only)";
+                sEmail = "demo.viewer@sap-prognos.internal";
+                sAvatarText = "DU";
             } else {
                 MessageToast.show("Invalid credentials. Try admin/admin or user/user.");
                 return;
             }
             
-            // Set global session
-            sap.ui.getCore().getModel("session").setData({
+            var sessionData = {
                 role: sRole,
-                username: sUser
-            });
+                username: sUser,
+                fullName: sFullName,
+                roleName: sRoleName,
+                email: sEmail,
+                avatarText: sAvatarText
+            };
+            
+            // Save to localStorage for refresh persistence
+            localStorage.setItem("sap_prognos_session", JSON.stringify(sessionData));
+            
+            // Set global and component session
+            if (sap.ui.getCore().getModel("session")) {
+                sap.ui.getCore().getModel("session").setData(sessionData);
+            }
+            if (this.getOwnerComponent() && this.getOwnerComponent().getModel("session")) {
+                this.getOwnerComponent().getModel("session").setData(sessionData);
+            }
             
             MessageToast.show("Welcome, " + sUser + "!");
             
