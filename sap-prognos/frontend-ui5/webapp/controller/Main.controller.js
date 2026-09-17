@@ -389,6 +389,38 @@ sap.ui.define([
             this._loadReorderAlerts();
             MessageToast.show("Inventory refreshed.");
         },
+
+        onExportInventoryCSV: function () {
+            var oModel = this.getView().getModel();
+            var aInventory = oModel.getProperty("/fullInventory") || [];
+            if (!aInventory.length) {
+                MessageToast.show("No inventory data available to export.");
+                return;
+            }
+            var csvRows = [
+                ["Store", "Item", "Current Stock", "Incoming Stock", "Target Stock", "Days Cover", "Risk Status", "Recommended Order"].join(",")
+            ];
+            aInventory.forEach(function (row) {
+                csvRows.push([
+                    row.store,
+                    row.item,
+                    row.current_stock,
+                    row.incoming_stock,
+                    row.target_stock,
+                    row.days_of_cover,
+                    row.risk,
+                    row.recommended_order
+                ].join(","));
+            });
+            var sCsvData = "data:text/csv;charset=utf-8," + encodeURIComponent(csvRows.join("\n"));
+            var oLink = document.createElement("a");
+            oLink.setAttribute("href", sCsvData);
+            oLink.setAttribute("download", "SAP_Prognos_Inventory_Reorder_Report.csv");
+            document.body.appendChild(oLink);
+            oLink.click();
+            document.body.removeChild(oLink);
+            MessageToast.show("Exported " + aInventory.length + " inventory records to CSV.");
+        },
         
         onRunAnomalies: function () {
             var oModel = this.getView().getModel();

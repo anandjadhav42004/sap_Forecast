@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  sap-prognos-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sap_prognos_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_PATH=/app/models/xgboost_model.json
+      - CONFIDENCE_LEVEL=0.85
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  sap-prognos-frontend:
+    image: nginx:alpine
+    container_name: sap_prognos_ui
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend-ui5/webapp:/usr/share/nginx/html:ro
+    depends_on:
+      - sap-prognos-backend
+    restart: unless-stopped

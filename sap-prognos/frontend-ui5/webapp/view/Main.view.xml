@@ -363,7 +363,10 @@
                                 <Panel class="cardPanel">
                                     <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
                                         <SearchField placeholder="Search by Store or Item..." width="300px" liveChange=".onInventorySearch" />
-                                        <Button text="Refresh" icon="sap-icon://refresh" press=".onRefreshInventory" />
+                                        <HBox>
+                                            <Button text="Export CSV" icon="sap-icon://excel-attachment" press=".onExportInventoryCSV" class="sapUiSmallMarginEnd" tooltip="Export Reorder Recommendations to CSV" />
+                                            <Button text="Refresh" icon="sap-icon://refresh" press=".onRefreshInventory" />
+                                        </HBox>
                                     </HBox>
                                     <Table id="inventoryTable" items="{/fullInventory}" noDataText="Loading inventory data...">
                                         <columns>
