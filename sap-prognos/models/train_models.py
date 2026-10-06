@@ -93,7 +93,7 @@ def run_model_comparison(data_dir, out_dir):
     print("Model comparison complete!")
 
 if __name__ == "__main__":
-    base_dir = "/Users/anand/Desktop/final project /sap-prognos"
+    out_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(out_dir)
     data_dir = os.path.join(base_dir, "data-prep")
-    out_dir = os.path.join(base_dir, "models")
     run_model_comparison(data_dir, out_dir)

@@ -68,6 +68,6 @@ def prep_data(raw_filepath, out_dir):
     print(f"Stores: {df['store'].nunique()}, Items: {df['item'].nunique()}")
 
 if __name__ == "__main__":
-    out_dir = "/Users/anand/Desktop/final project /sap-prognos/data-prep"
+    out_dir = os.path.dirname(os.path.abspath(__file__))
     raw_file = os.path.join(out_dir, "train.csv") # The Kaggle file
     prep_data(raw_file, out_dir)

@@ -151,33 +151,49 @@
                                 <HBox alignItems="Center" justifyContent="SpaceBetween" width="100%">
                                     <HBox alignItems="Center">
                                         <Label text="Store:" class="sapUiSmallMarginEnd" />
-                                        <Select id="inputStore" selectedKey="{/store}" width="120px" class="sapUiMediumMarginEnd">
+                                        <Select id="inputStore" selectedKey="{/store}" change=".onStoreOrItemChange" width="110px" class="sapUiSmallMarginEnd">
                                             <core:Item key="1" text="Store 1" />
                                             <core:Item key="2" text="Store 2" />
                                             <core:Item key="3" text="Store 3" />
                                             <core:Item key="4" text="Store 4" />
+                                            <core:Item key="5" text="Store 5" />
+                                            <core:Item key="6" text="Store 6" />
+                                            <core:Item key="7" text="Store 7" />
+                                            <core:Item key="8" text="Store 8" />
+                                            <core:Item key="9" text="Store 9" />
+                                            <core:Item key="10" text="Store 10" />
                                         </Select>
                                         
                                         <Label text="Item:" class="sapUiSmallMarginEnd" />
-                                        <Select id="inputItem" selectedKey="{/item}" width="120px" class="sapUiMediumMarginEnd">
+                                        <Select id="inputItem" selectedKey="{/item}" change=".onStoreOrItemChange" width="110px" class="sapUiSmallMarginEnd">
+                                            <core:Item key="1" text="Item 1" />
+                                            <core:Item key="5" text="Item 5" />
                                             <core:Item key="10" text="Item 10" />
                                             <core:Item key="15" text="Item 15" />
                                             <core:Item key="20" text="Item 20" />
                                             <core:Item key="25" text="Item 25" />
+                                            <core:Item key="30" text="Item 30" />
+                                            <core:Item key="40" text="Item 40" />
+                                            <core:Item key="50" text="Item 50" />
                                         </Select>
                                         
+                                        <Button icon="sap-icon://synchronize" tooltip="Auto-fetch actuals from database" press=".onRefreshActuals" class="sapUiSmallMarginEnd" />
+                                        
                                         <Label text="Forecast Date:" class="sapUiSmallMarginEnd" />
-                                        <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="150px" class="sapUiMediumMarginEnd" />
+                                        <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="130px" class="sapUiSmallMarginEnd" />
+                                        
+                                        <Label text="Horizon (days):" class="sapUiSmallMarginEnd" tooltip="How many days to forecast ahead (1-30)" />
+                                        <StepInput id="inputHorizon" value="{/horizonDays}" min="1" max="30" step="1" width="80px" class="sapUiSmallMarginEnd" />
                                     </HBox>
                                     <HBox alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
-                                        <Label text="Sales Lag 1:" class="sapUiSmallMarginEnd" tooltip="Sales from 1 day ago" />
-                                        <Input value="{/salesLag1}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                        <Label text="Sales Lag 1:" class="sapUiSmallMarginEnd" tooltip="Sales from 1 day ago (Auto-computed)" />
+                                        <Input value="{/salesLag1}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
                                         
-                                        <Label text="Sales Lag 7:" class="sapUiSmallMarginEnd" tooltip="Sales from 7 days ago" />
-                                        <Input value="{/salesLag7}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                        <Label text="Sales Lag 7:" class="sapUiSmallMarginEnd" tooltip="Sales from 7 days ago (Auto-computed)" />
+                                        <Input value="{/salesLag7}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
                                         
-                                        <Label text="7-Day Rolling Mean:" class="sapUiSmallMarginEnd" tooltip="Average sales over the last 7 days" />
-                                        <Input value="{/salesRollMean7}" type="Number" width="100px" class="sapUiMediumMarginEnd" />
+                                        <Label text="7-Day Rolling Mean:" class="sapUiSmallMarginEnd" tooltip="Average sales over the last 7 days (Auto-computed)" />
+                                        <Input value="{/salesRollMean7}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
                                     </HBox>
                                     <Button text="Get Forecast" type="Emphasized" press=".onGetForecast" busy="{/isBusy}" />
                                 </HBox>
@@ -298,30 +314,45 @@
                                 <Panel class="cardPanel sapUiSmallMarginBottom">
                                     <VBox>
                                         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Store:" class="sapUiSmallMarginEnd" width="100px" />
-                                            <Select selectedKey="{/simStore}" width="150px">
+                                            <Label text="Store:" class="sapUiSmallMarginEnd" width="120px" />
+                                            <Select id="simStoreSelect" selectedKey="{/simStore}" width="150px" change=".onSimStoreOrItemChange">
                                                 <core:Item key="1" text="Store 1" />
                                                 <core:Item key="2" text="Store 2" />
+                                                <core:Item key="3" text="Store 3" />
+                                                <core:Item key="4" text="Store 4" />
+                                                <core:Item key="5" text="Store 5" />
+                                                <core:Item key="6" text="Store 6" />
+                                                <core:Item key="7" text="Store 7" />
+                                                <core:Item key="8" text="Store 8" />
+                                                <core:Item key="9" text="Store 9" />
+                                                <core:Item key="10" text="Store 10" />
                                             </Select>
                                         </HBox>
                                         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Item:" class="sapUiSmallMarginEnd" width="100px" />
-                                            <Select selectedKey="{/simItem}" width="150px">
+                                            <Label text="Item:" class="sapUiSmallMarginEnd" width="120px" />
+                                            <Select id="simItemSelect" selectedKey="{/simItem}" width="150px" change=".onSimStoreOrItemChange">
+                                                <core:Item key="1" text="Item 1" />
+                                                <core:Item key="5" text="Item 5" />
                                                 <core:Item key="10" text="Item 10" />
                                                 <core:Item key="15" text="Item 15" />
+                                                <core:Item key="20" text="Item 20" />
+                                                <core:Item key="25" text="Item 25" />
+                                                <core:Item key="30" text="Item 30" />
+                                                <core:Item key="40" text="Item 40" />
+                                                <core:Item key="50" text="Item 50" />
                                             </Select>
                                         </HBox>
                                         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Demand Adjust:" class="sapUiSmallMarginEnd" width="100px" />
-                                            <Slider value="{/simDemandAdjust}" min="-50" max="100" showAdvancedTooltip="true" width="300px" class="sapUiSmallMarginEnd" />
+                                            <Label text="Demand Adjust:" class="sapUiSmallMarginEnd" width="120px" />
+                                            <Slider value="{/simDemandAdjust}" min="-50" max="100" showAdvancedTooltip="true" width="280px" class="sapUiSmallMarginEnd" />
                                             <Text text="{/simDemandAdjust}%" />
                                         </HBox>
                                         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Promotion:" class="sapUiSmallMarginEnd" width="100px" />
+                                            <Label text="Promotion (+15%):" class="sapUiSmallMarginEnd" width="120px" />
                                             <Switch state="{/simPromotion}" customTextOn="Yes" customTextOff="No" />
                                         </HBox>
                                         <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="High Season:" class="sapUiSmallMarginEnd" width="100px" />
+                                            <Label text="High Season (+10%):" class="sapUiSmallMarginEnd" width="120px" />
                                             <Switch state="{/simSeasonality}" customTextOn="Yes" customTextOff="No" />
                                         </HBox>
                                         
@@ -329,18 +360,26 @@
                                     </VBox>
                                 </Panel>
                                 
-                                <HBox width="100%">
-                                    <VBox class="highlightCard blueTint sapUiSmallMarginEnd" width="50%">
-                                        <Text text="Current Forecast" class="cardTitle blueText" />
+                                <HBox width="100%" class="sapUiSmallMarginBottom">
+                                    <VBox class="highlightCard blueTint sapUiSmallMarginEnd" width="33%">
+                                        <Text text="Base Forecast (No Adjustments)" class="cardTitle blueText" />
                                         <Title text="{/simCurrentForecast}" class="highlightValue blueText" />
                                     </VBox>
-                                    <VBox class="highlightCard tealTint" width="50%">
-                                        <Text text="Simulated Forecast" class="cardTitle tealText" />
+                                    <VBox class="highlightCard tealTint sapUiSmallMarginEnd" width="33%">
+                                        <Text text="Simulated Demand" class="cardTitle tealText" />
                                         <Title text="{/simSimulatedForecast}" class="highlightValue tealText" />
+                                    </VBox>
+                                    <VBox class="highlightCard" width="34%">
+                                        <Text text="Risk Classification" class="cardTitle" />
+                                        <ObjectStatus 
+                                            text="{/simRisk}" 
+                                            state="{= ${/simRisk} === 'CRITICAL' ? 'Error' : (${/simRisk} === 'HIGH' ? 'Warning' : 'Success')}"
+                                            icon="{= ${/simRisk} === 'CRITICAL' ? 'sap-icon://error' : (${/simRisk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}"
+                                            class="sapUiSmallMarginTop" />
                                     </VBox>
                                 </HBox>
                                 
-                                <Panel class="cardPanel sapUiSmallMarginTop">
+                                <Panel class="cardPanel sapUiSmallMarginBottom">
                                     <Text text="Inventory Recommendation" class="cardTitle sapUiSmallMarginBottom" />
                                     <HBox alignItems="Center">
                                         <core:Icon src="sap-icon://inventory" size="2rem" class="sapUiMediumMarginEnd" color="#64748b" />
@@ -350,6 +389,15 @@
                                         </VBox>
                                     </HBox>
                                 </Panel>
+                                
+                                <!-- Scenario Explanation Narrative -->
+                                <VBox visible="{= ${/simScenarioText} !== '' }" class="scenarioPanel">
+                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                        <core:Icon src="sap-icon://ai" color="#a78bfa" class="sapUiSmallMarginEnd" />
+                                        <Text text="AI Scenario Analysis" class="cardTitle" />
+                                    </HBox>
+                                    <Text text="{/simScenarioText}" class="scenarioText" wrapping="true" />
+                                </VBox>
                                 
                             </VBox>
                         </ScrollContainer>
@@ -378,6 +426,7 @@
                                             <Column hAlign="End"><Text text="Days Cover" /></Column>
                                             <Column hAlign="Center"><Text text="Status" /></Column>
                                             <Column hAlign="End"><Text text="Recommended Order" /></Column>
+                                            <Column hAlign="Center" visible="{= ${session>/role} === 'admin' }"><Text text="Action" /></Column>
                                         </columns>
                                         <items>
                                             <ColumnListItem>
@@ -390,6 +439,7 @@
                                                     <Text text="{days_of_cover}" />
                                                     <ObjectStatus text="{risk}" state="{= ${risk} === 'CRITICAL' ? 'Error' : (${risk} === 'HIGH' ? 'Warning' : (${risk} === 'MEDIUM' ? 'Information' : 'Success'))}" icon="{= ${risk} === 'CRITICAL' ? 'sap-icon://error' : (${risk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}" />
                                                     <Text text="{recommended_order}" />
+                                                    <Button text="Trigger PO" icon="sap-icon://cart" type="Emphasized" press=".onTriggerPO" visible="{= ${session>/role} === 'admin' }" />
                                                 </cells>
                                             </ColumnListItem>
                                         </items>
@@ -437,7 +487,12 @@
                                             <VBox id="anomalyResults" class="sapUiSmallMarginTop" visible="{= ${/anomalies}.length > 0 }">
                                                 <Text text="Found {/anomaliesCount} anomalies in recent history." class="warningText sapUiSmallMarginBottom" />
                                                 <List items="{/anomalies}">
-                                                    <StandardListItem title="Date: {date}" description="Expected: {expected} | Actual: {actual_sales} ({deviation_pct}%)" icon="{= ${is_spike} ? 'sap-icon://trend-up' : 'sap-icon://trend-down'}" infoState="{= ${is_spike} ? 'Success' : 'Error'}" />
+                                                    <StandardListItem 
+                                                        title="{anomaly_type} — {date}" 
+                                                        description="Expected: {expected} units | Actual: {actual_sales} units ({deviation_pct}% deviation) — {severity}" 
+                                                        icon="{= ${is_spike} ? 'sap-icon://trend-up' : 'sap-icon://trend-down'}" 
+                                                        info="{planning_impact}"
+                                                        infoState="{= ${is_spike} ? 'Error' : 'Warning'}" />
                                                 </List>
                                             </VBox>
                                         </Panel>

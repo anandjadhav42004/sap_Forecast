@@ -79,3 +79,44 @@ Fetch global active reorder alerts for the dashboard.
 - **Method**: `GET`
 - **Path**: `/reorder-alerts`
 - **Response**: Returns `count` and an array of `alerts` where current stock is near or below the reorder point.
+
+## 5. Historical Sales
+Fetch true chronological historical sales points for the selected SKU.
+
+- **Method**: `GET`
+- **Path**: `/history/{store}/{item}?limit=14`
+- **Response**:
+  ```json
+  {
+    "store": 2,
+    "item": 10,
+    "count": 14,
+    "history": [
+      { "date": "2017-12-18", "sales": 52.0 },
+      ...
+    ]
+  }
+  ```
+
+## 6. Auto-Calculated Lag Features
+Dynamically compute autoregressive lags (`sales_lag_1`, `sales_lag_7`) and rolling 7-day mean (`sales_roll_mean_7`) from database history.
+
+- **Method**: `GET`
+- **Path**: `/features/{store}/{item}`
+- **Response**: Returns next forecast date, computed lags, rolling mean, and recent history series.
+
+## 7. Purchase Order Management
+Persist real purchase orders and automatically update incoming inventory stock.
+
+- **Method**: `POST`
+- **Path**: `/purchase-order`
+- **Request Body**:
+  ```json
+  {
+    "store": 2,
+    "item": 10,
+    "quantity": 75
+  }
+  ```
+- **Response**: Returns created `order_id`, scheduled delivery date, and updated inventory state with increased `incoming_stock`.
+- **List Orders Path**: `GET /orders` returns all placed purchase orders.

@@ -14,6 +14,7 @@ sap.ui.define([
                 salesLag1: 41.0,
                 salesLag7: 45.0,
                 salesRollMean7: 41.7,
+                horizonDays: 7,
                 forecastResult: "---",
                 isBusy: false,
                 reorderAlertsCount: 0,
@@ -29,6 +30,8 @@ sap.ui.define([
                 simSimulatedForecast: "---",
                 simInventoryImpact: 0,
                 simRecommendedOrder: 0,
+                simRisk: "---",
+                simScenarioText: "",
                 anomalies: [],
                 anomaliesCount: 0,
                 backendStatus: "Checking...",
@@ -84,6 +87,67 @@ sap.ui.define([
             this._loadMetrics();
             this._loadReorderAlerts();
             this._loadHealth();
+            this._loadStoreItemData(2, 10);
+        },
+
+        _loadStoreItemData: function (store, item) {
+            var oModel = this.getView().getModel();
+            fetch(this._getApiBaseUrl() + "/features/" + store + "/" + item)
+                .then(response => {
+                    if (!response.ok) throw new Error("Could not fetch features");
+                    return response.json();
+                })
+                .then(data => {
+                    oModel.setProperty("/salesLag1", data.sales_lag_1);
+                    oModel.setProperty("/salesLag7", data.sales_lag_7);
+                    oModel.setProperty("/salesRollMean7", data.sales_roll_mean_7);
+                    oModel.setProperty("/date", data.next_date);
+                    this._currentHistory = data.history || [];
+                    this._setupChart(null, null, null, this._currentHistory);
+                })
+                .catch(err => {
+                    console.error("Failed to load store/item data", err);
+                });
+        },
+
+        onStoreOrItemChange: function () {
+            var oModel = this.getView().getModel();
+            var store = oModel.getProperty("/store");
+            var item = oModel.getProperty("/item");
+            this._loadStoreItemData(store, item);
+        },
+
+        onSimStoreOrItemChange: function () {
+            // Pre-fetch lag features for the simulator's selected store/item
+            // so the simulation uses real data, not hardcoded defaults
+            var oModel = this.getView().getModel();
+            var store = oModel.getProperty("/simStore");
+            var item = oModel.getProperty("/simItem");
+            fetch(this._getApiBaseUrl() + "/features/" + store + "/" + item)
+                .then(response => {
+                    if (!response.ok) throw new Error("Could not fetch features");
+                    return response.json();
+                })
+                .then(data => {
+                    // Cache the sim lag features so onRunSimulation can use them
+                    this._simLagFeatures = {
+                        sales_lag_1: data.sales_lag_1,
+                        sales_lag_7: data.sales_lag_7,
+                        sales_roll_mean_7: data.sales_roll_mean_7,
+                        date: data.next_date
+                    };
+                })
+                .catch(err => {
+                    console.warn("Could not pre-fetch sim features, will use defaults", err);
+                });
+        },
+
+        onRefreshActuals: function () {
+            var oModel = this.getView().getModel();
+            var store = oModel.getProperty("/store");
+            var item = oModel.getProperty("/item");
+            this._loadStoreItemData(store, item);
+            MessageToast.show("Auto-fetched latest actuals and lag features for Store " + store + ", Item " + item);
         },
         
         _getApiBaseUrl: function () {
@@ -132,6 +196,7 @@ sap.ui.define([
                             item: alert.item,
                             currentStock: alert.current_stock,
                             safetyStock: alert.safety_stock,
+                            recommendedOrder: alert.recommended_order || 50,
                             statusText: isCritical ? "Critical" : "Low",
                             trendIcon: isCritical ? "sap-icon://error" : "sap-icon://warning2",
                             trendColor: isCritical ? "Error" : "Warning"
@@ -147,7 +212,7 @@ sap.ui.define([
             setTimeout(this._setupChart.bind(this), 200);
         },
         
-        _setupChart: function (forecastVal, confLower, confUpper) {
+        _setupChart: function (forecastVal, confLower, confUpper, customHistory) {
             var canvas = document.getElementById("forecastChart");
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
@@ -158,11 +223,28 @@ sap.ui.define([
             }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            var historyData = [45, 38, 42, 40, 47, 39, 41];
-            var labels = ["Day -6", "Day -5", "Day -4", "Day -3", "Day -2", "Day -1", "Today", "Forecast"];
+            var historyList = customHistory || this._currentHistory;
+            var historyData = [];
+            var labels = [];
             
-            // Only pad history with null for forecast point if we are actually drawing the forecast
-            var historyDataset = forecastVal ? [...historyData, null] : historyData;
+            if (historyList && historyList.length > 0) {
+                var recentPoints = historyList.slice(-7);
+                historyData = recentPoints.map(p => p.sales);
+                labels = recentPoints.map(p => {
+                    var parts = p.date.split("-");
+                    return parts.length === 3 ? parts[1] + "/" + parts[2] : p.date;
+                });
+            } else {
+                historyData = [76, 68, 65, 88, 86, 114, 116];
+                labels = ["12/25", "12/26", "12/27", "12/28", "12/29", "12/30", "12/31"];
+            }
+            
+            var hasForecast = (forecastVal !== null && forecastVal !== undefined);
+            if (hasForecast) {
+                labels.push("Forecast");
+            }
+            
+            var historyDataset = hasForecast ? [...historyData, null] : historyData;
             
             var datasets = [
                 {
@@ -181,14 +263,12 @@ sap.ui.define([
                 }
             ];
             
-            if (forecastVal) {
+            if (hasForecast) {
                 var lastHistorical = historyData[historyData.length - 1];
-                // Forecast line connecting last point to forecast
-                var forecastDataset = [null, null, null, null, null, null, lastHistorical, forecastVal];
-                
-                // Confidence bounds (start from last historical point)
-                var upperBound = [null, null, null, null, null, null, lastHistorical, confUpper || (forecastVal * 1.1)];
-                var lowerBound = [null, null, null, null, null, null, lastHistorical, confLower || (forecastVal * 0.9)];
+                var padCount = historyData.length - 1;
+                var forecastDataset = Array(padCount).fill(null).concat([lastHistorical, forecastVal]);
+                var upperBound = Array(padCount).fill(null).concat([lastHistorical, confUpper || (forecastVal * 1.129)]);
+                var lowerBound = Array(padCount).fill(null).concat([lastHistorical, confLower || (forecastVal * 0.871)]);
                 
                 datasets.push({
                     label: 'Upper Bound',
@@ -200,23 +280,23 @@ sap.ui.define([
                 });
                 
                 datasets.push({
-                    label: 'Confidence Band',
+                    label: 'Confidence Band (85%)',
                     data: lowerBound,
                     borderColor: 'transparent',
                     backgroundColor: 'rgba(217, 70, 239, 0.15)', // Magenta shade
                     pointRadius: 0,
-                    fill: 1 // Absolute index of Upper Bound dataset (which is index 1)
+                    fill: 1 // Absolute index of Upper Bound dataset
                 });
                 
                 datasets.push({
-                    label: 'Forecast',
+                    label: 'Predicted Demand',
                     data: forecastDataset,
                     borderColor: '#d946ef', // Magenta
                     backgroundColor: '#d946ef',
                     borderWidth: 3,
                     borderDash: [6, 6],
                     tension: 0.4,
-                    pointRadius: [0,0,0,0,0,0,0,6],
+                    pointRadius: Array(padCount).fill(0).concat([0, 6]),
                     pointBackgroundColor: '#0f172a',
                     pointBorderColor: '#d946ef',
                     pointBorderWidth: 2,
@@ -252,6 +332,126 @@ sap.ui.define([
             });
         },
 
+        _setupHorizonChart: function (historyList, horizonForecast, globalLower, globalUpper) {
+            var canvas = document.getElementById("forecastChart");
+            if (!canvas) return;
+            var ctx = canvas.getContext('2d');
+
+            if (this._chartInstance) {
+                this._chartInstance.destroy();
+            }
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Build historical portion (last 7 actuals)
+            var historyData = [];
+            var historyLabels = [];
+            if (historyList && historyList.length > 0) {
+                var recentPoints = historyList.slice(-7);
+                historyData = recentPoints.map(function(p) { return p.sales; });
+                historyLabels = recentPoints.map(function(p) {
+                    var parts = p.date.split("-");
+                    return parts.length === 3 ? parts[1] + "/" + parts[2] : p.date;
+                });
+            } else {
+                historyData = [76, 68, 65, 88, 86, 114, 116];
+                historyLabels = ["D-7", "D-6", "D-5", "D-4", "D-3", "D-2", "D-1"];
+            }
+
+            // Build forecast portion from horizon array
+            var horizonValues = horizonForecast.map(function(h) { return h.predicted_demand; });
+            var horizonLabels = horizonForecast.map(function(h) {
+                var parts = h.date.split("-");
+                return parts.length === 3 ? "F" + h.day_index + " (" + parts[1] + "/" + parts[2] + ")" : "F" + h.day_index;
+            });
+            var horizonUpper = horizonForecast.map(function(h) { return h.upper_bound; });
+            var horizonLower = horizonForecast.map(function(h) { return h.lower_bound; });
+
+            // Combine history + horizon
+            var lastHistorical = historyData[historyData.length - 1];
+            var allLabels = historyLabels.concat(horizonLabels);
+            var histPad = Array(historyData.length - 1).fill(null).concat([lastHistorical]);
+            var forecastPad = Array(historyData.length - 1).fill(null).concat([lastHistorical]).concat(horizonValues);
+            var upperPad = Array(historyData.length - 1).fill(null).concat([lastHistorical]).concat(horizonUpper);
+            var lowerPad = Array(historyData.length - 1).fill(null).concat([lastHistorical]).concat(horizonLower);
+            var histDataFull = historyData.concat(Array(horizonForecast.length).fill(null));
+
+            this._chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels,
+                    datasets: [
+                        {
+                            label: 'Historical Sales',
+                            data: histDataFull,
+                            borderColor: '#38bdf8',
+                            backgroundColor: '#38bdf8',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointBackgroundColor: '#0f172a',
+                            pointBorderColor: '#38bdf8',
+                            pointBorderWidth: 2
+                        },
+                        {
+                            label: 'Upper Bound',
+                            data: upperPad,
+                            borderColor: 'transparent',
+                            backgroundColor: 'transparent',
+                            pointRadius: 0,
+                            fill: false
+                        },
+                        {
+                            label: 'Confidence Band (85%)',
+                            data: lowerPad,
+                            borderColor: 'transparent',
+                            backgroundColor: 'rgba(217, 70, 239, 0.12)',
+                            pointRadius: 0,
+                            fill: 1
+                        },
+                        {
+                            label: 'Forecast (Multi-Day)',
+                            data: forecastPad,
+                            borderColor: '#d946ef',
+                            backgroundColor: '#d946ef',
+                            borderWidth: 3,
+                            borderDash: [6, 6],
+                            tension: 0.4,
+                            pointRadius: Array(historyData.length).fill(0).concat(Array(horizonForecast.length).fill(4)),
+                            pointBackgroundColor: '#0f172a',
+                            pointBorderColor: '#d946ef',
+                            pointBorderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: function(items) {
+                                    return items[0].label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', maxRotation: 45 }
+                        }
+                    }
+                }
+            });
+        },
+
+
         onGetForecast: function () {
             var oView = this.getView();
             var oModel = oView.getModel();
@@ -259,6 +459,7 @@ sap.ui.define([
             var store = parseInt(oModel.getProperty("/store"));
             var item = parseInt(oModel.getProperty("/item"));
             var date = oModel.getProperty("/date");
+
             
             if (!store || !item || !date) {
                 MessageToast.show("Please fill all input fields.");
@@ -274,7 +475,8 @@ sap.ui.define([
                 date: date,
                 sales_lag_1: parseFloat(oModel.getProperty("/salesLag1")) || 0,
                 sales_lag_7: parseFloat(oModel.getProperty("/salesLag7")) || 0,
-                sales_roll_mean_7: parseFloat(oModel.getProperty("/salesRollMean7")) || 0
+                sales_roll_mean_7: parseFloat(oModel.getProperty("/salesRollMean7")) || 0,
+                horizon_days: parseInt(oModel.getProperty("/horizonDays")) || 7
             };
             
             // Wait a bit to simulate network delay so the busy indicator is visible
@@ -299,11 +501,18 @@ sap.ui.define([
                     var formattedResult = parseFloat(predictedVal).toFixed(1) + " units";
                     oModel.setProperty("/forecastResult", formattedResult);
                     oModel.setProperty("/explainability", data.explainability);
-                    this._setupChart(predictedVal, lowerVal, upperVal);
+                    
+                    // Use full multi-day horizon for chart if available
+                    var historyForChart = this._currentHistory || [];
+                    if (data.horizon_forecast && data.horizon_forecast.length > 1) {
+                        this._setupHorizonChart(historyForChart, data.horizon_forecast, data.lower_bound, data.upper_bound);
+                    } else {
+                        this._setupChart(predictedVal, lowerVal, upperVal, historyForChart);
+                    }
                     oModel.setProperty("/lastUpdated", new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
                     this.byId("lastUpdatedKpi").setText(oModel.getProperty("/lastUpdated"));
                     
-                    MessageToast.show("Forecast generated successfully.");
+                    MessageToast.show("Forecast generated: " + formattedResult + " (" + (data.horizon_days || 1) + "-day horizon)");
                 })
                 .catch(error => {
                     oModel.setProperty("/isBusy", false);
@@ -318,14 +527,26 @@ sap.ui.define([
         onRunSimulation: function () {
             var oModel = this.getView().getModel();
             oModel.setProperty("/isBusy", true);
+            oModel.setProperty("/simScenarioText", "");
             
-            var payload = {
-                store: parseInt(oModel.getProperty("/simStore")),
-                item: parseInt(oModel.getProperty("/simItem")),
-                date: "2018-01-01",
+            var simStore = parseInt(oModel.getProperty("/simStore"));
+            var simItem = parseInt(oModel.getProperty("/simItem"));
+            
+            // Use pre-fetched real lag features if available, otherwise fall back to defaults
+            var lagFeatures = this._simLagFeatures || {
                 sales_lag_1: 41.0,
                 sales_lag_7: 45.0,
                 sales_roll_mean_7: 41.7,
+                date: "2018-01-01"
+            };
+            
+            var payload = {
+                store: simStore,
+                item: simItem,
+                date: lagFeatures.date || "2018-01-01",
+                sales_lag_1: lagFeatures.sales_lag_1,
+                sales_lag_7: lagFeatures.sales_lag_7,
+                sales_roll_mean_7: lagFeatures.sales_roll_mean_7,
                 demand_adjustment_pct: parseFloat(oModel.getProperty("/simDemandAdjust")),
                 is_promotion: oModel.getProperty("/simPromotion"),
                 high_seasonality: oModel.getProperty("/simSeasonality")
@@ -343,15 +564,18 @@ sap.ui.define([
                 var adjustedForecast = (data.adjusted_forecast !== undefined) ? data.adjusted_forecast : data.simulated_forecast;
                 var shortageVal = (data.shortage !== undefined) ? data.shortage : (data.inventory_impact_units !== undefined ? data.inventory_impact_units : 0);
                 
-                oModel.setProperty("/simCurrentForecast", (baseForecast !== undefined ? baseForecast : 0) + " units");
-                oModel.setProperty("/simSimulatedForecast", (adjustedForecast !== undefined ? adjustedForecast : 0) + " units");
+                oModel.setProperty("/simCurrentForecast", (baseForecast !== undefined ? parseFloat(baseForecast).toFixed(1) : "0") + " units");
+                oModel.setProperty("/simSimulatedForecast", (adjustedForecast !== undefined ? parseFloat(adjustedForecast).toFixed(1) : "0") + " units");
                 oModel.setProperty("/simInventoryImpact", shortageVal);
                 oModel.setProperty("/simRecommendedOrder", data.recommended_order !== undefined ? data.recommended_order : 0);
+                oModel.setProperty("/simRisk", data.risk || (data.simulated_case && data.simulated_case.risk) || "---");
+                oModel.setProperty("/simScenarioText", data.scenario_explanation || "");
                 MessageToast.show("Simulation complete.");
             })
             .catch(error => {
                 oModel.setProperty("/isBusy", false);
-                MessageToast.show("Simulation failed.");
+                MessageToast.show("Simulation failed. Ensure backend is running.");
+                console.error("Simulation error:", error);
             });
         },
 
@@ -495,10 +719,34 @@ sap.ui.define([
 
         onTriggerPO: function (oEvent) {
             var oContext = oEvent.getSource().getBindingContext();
-            var sStore = oContext ? oContext.getProperty("store") : "1";
-            var sItem = oContext ? oContext.getProperty("item") : "10";
-            var sPoId = "PO-" + Math.floor(10000 + Math.random() * 90000);
-            MessageToast.show("Purchase Order " + sPoId + " triggered for Store " + sStore + " — Item " + sItem + "!");
+            var iStore = oContext ? parseInt(oContext.getProperty("store")) : 1;
+            var iItem = oContext ? parseInt(oContext.getProperty("item")) : 10;
+            var iRecommended = oContext ? parseInt(oContext.getProperty("recommendedOrder") || oContext.getProperty("recommended_order") || 50) : 50;
+            
+            var payload = {
+                store: iStore,
+                item: iItem,
+                quantity: iRecommended > 0 ? iRecommended : 50
+            };
+            
+            fetch(this._getApiBaseUrl() + "/purchase-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Purchase Order request failed");
+                return response.json();
+            })
+            .then(data => {
+                var order = data.order;
+                MessageToast.show("✅ Order " + order.order_id + " Placed: +" + order.quantity + " units scheduled for Store " + iStore + " — Item " + iItem + " (Delivery: " + order.expected_delivery_date + ")");
+                this._loadReorderAlerts();
+            })
+            .catch(err => {
+                console.error("PO trigger failed:", err);
+                MessageToast.show("❌ Failed to place purchase order. Check backend connection.");
+            });
         },
 
         onQuickReviewOrders: function () {

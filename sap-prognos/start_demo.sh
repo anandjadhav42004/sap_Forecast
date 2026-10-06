@@ -33,10 +33,7 @@ fi
 # Step 3: Start Backend API
 echo "⚙️  [3/4] Starting FastAPI backend on http://localhost:8000..."
 cd "$BACKEND_DIR"
-$PYTHON_BIN -m uvicorn main:app --port 8000 --host 0.0.0.0 &
-BACKEND_PID=$!
-
-# Step 4: Start Frontend UI5 Server
+  "$PYTHON_BIN" -m uvicorn main:app --port 8000 --host 0.0.0.0 &
 echo "🌐 [4/4] Starting UI5 web server on http://localhost:8080..."
 cd "$FRONTEND_DIR"
 python3 -m http.server 8080 &
