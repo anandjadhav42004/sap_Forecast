@@ -1,660 +1,612 @@
 /* ============================================================
-   SAP Prognos — Premium Dark UI — v2.0
-   Ultra-polished glassmorphism design system
+   SAP Prognos — Premium Dark UI — v3.0
+   Clean, consistent, Inter-first design system
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* ─── 1. Google Font Import ──────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
-/* ─── CSS Variables ──────────────────────────────────────── */
-:root {
-    --bg-deep:       #04060f;
-    --bg-surface:    #080d1a;
-    --bg-card:       rgba(14, 22, 40, 0.75);
-    --bg-card-hover: rgba(20, 30, 55, 0.85);
-
-    --border-soft:   rgba(255, 255, 255, 0.07);
-    --border-glow:   rgba(99, 120, 255, 0.35);
-
-    --accent-blue:   #4f8eff;
-    --accent-violet: #8b5cf6;
-    --accent-cyan:   #06d6f7;
-    --accent-teal:   #10d9b0;
-    --accent-amber:  #f59e0b;
-    --accent-red:    #f43f5e;
-    --accent-green:  #22d3a0;
-
-    --text-primary:  #eef2ff;
-    --text-secondary:#94a3b8;
-    --text-muted:    #475569;
-
-    --radius-lg: 20px;
-    --radius-md: 14px;
-    --radius-sm: 10px;
-
-    --shadow-card: 0 8px 40px rgba(0,0,0,0.55);
-    --shadow-glow-blue:   0 0 30px rgba(79,142,255,0.25);
-    --shadow-glow-violet: 0 0 30px rgba(139,92,246,0.3);
-    --shadow-glow-cyan:   0 0 25px rgba(6,214,247,0.2);
-    --shadow-glow-teal:   0 0 25px rgba(16,217,176,0.2);
-}
-
-/* ─── Global Reset & Font ────────────────────────────────── */
-*, *::before, *::after {
+/* ─── 2. Inter font forced on EVERYTHING ─────────────────── */
+*,
+*::before,
+*::after,
+html, body,
+[class],
+[class] * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.sapUiBody,
-.sapUiBody * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+/* ─── 3. Design Tokens ───────────────────────────────────── */
+:root {
+    /* Backgrounds */
+    --bg-deep:        #04060f;
+    --bg-surface:     #080d1a;
+    --bg-card:        rgba(12, 20, 38, 0.78);
+    --bg-card-hover:  rgba(18, 28, 52, 0.88);
+
+    /* Borders */
+    --border-soft:    rgba(255, 255, 255, 0.07);
+    --border-blue:    rgba(79, 142, 255, 0.25);
+    --border-violet:  rgba(139, 92, 246, 0.3);
+
+    /* Accent Colors */
+    --blue:    #4f8eff;
+    --violet:  #8b5cf6;
+    --cyan:    #06d6f7;
+    --teal:    #10d9b0;
+    --amber:   #f59e0b;
+    --red:     #f43f5e;
+    --green:   #22d3a0;
+
+    /* Text */
+    --text-1: #eef2ff;   /* primary */
+    --text-2: #94a3b8;   /* secondary */
+    --text-3: #475569;   /* muted */
+
+    /* Radii */
+    --r-xl:  22px;
+    --r-lg:  16px;
+    --r-md:  12px;
+    --r-sm:  8px;
+
+    /* Shadows */
+    --shadow:        0 8px 40px rgba(0, 0, 0, 0.6);
+    --glow-blue:     0 0 30px rgba(79, 142, 255, 0.22);
+    --glow-violet:   0 0 30px rgba(139, 92, 246, 0.28);
+    --glow-teal:     0 0 25px rgba(16, 217, 176, 0.2);
+    --glow-amber:    0 0 20px rgba(245, 158, 11, 0.15);
 }
 
-/* ─── App Background ─────────────────────────────────────── */
+/* ─── 4. Global App Background ───────────────────────────── */
 .sapUiBody,
 .mainContentBg {
     background:
-        radial-gradient(ellipse 80% 60% at 10% -10%, rgba(79,142,255,0.12) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 90% 100%, rgba(139,92,246,0.10) 0%, transparent 55%),
-        radial-gradient(ellipse 100% 100% at 50% 50%, #04060f 0%, #07101f 100%) !important;
-    color: var(--text-primary) !important;
+        radial-gradient(ellipse 80% 55% at 8% -5%,   rgba(79,142,255,0.11) 0%, transparent 55%),
+        radial-gradient(ellipse 60% 50% at 92% 105%,  rgba(139,92,246,0.09) 0%, transparent 55%),
+        linear-gradient(180deg, #04060f 0%, #060e1c 100%) !important;
+    color: var(--text-1) !important;
     min-height: 100vh;
 }
 
-/* ─── Animated mesh overlay ──────────────────────────────── */
+/* Subtle grid mesh */
 .mainContentBg::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image:
-        linear-gradient(rgba(79,142,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(79,142,255,0.03) 1px, transparent 1px);
-    background-size: 60px 60px;
+        linear-gradient(rgba(79,142,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,142,255,0.025) 1px, transparent 1px);
+    background-size: 64px 64px;
     pointer-events: none;
     z-index: 0;
 }
 
-/* ─── Dashboard Container ────────────────────────────────── */
+/* ─── 5. Dashboard Container ─────────────────────────────── */
 .dashboardContainer {
-    max-width: 1280px;
+    max-width: 1300px;
     margin: 0 auto;
     padding: 1.75rem 2rem;
     position: relative;
     z-index: 1;
 }
 
-/* ─── Header ─────────────────────────────────────────────── */
+/* ─── 6. Header ──────────────────────────────────────────── */
 .navyHeader {
-    background: rgba(4, 6, 15, 0.85) !important;
-    backdrop-filter: blur(24px) saturate(180%) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-    border-bottom: 1px solid rgba(79,142,255,0.12) !important;
-    box-shadow: 0 1px 0 rgba(79,142,255,0.08), 0 4px 24px rgba(0,0,0,0.4) !important;
+    background: rgba(3, 5, 14, 0.88) !important;
+    backdrop-filter: blur(28px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+    border-bottom: 1px solid rgba(79, 142, 255, 0.10) !important;
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5) !important;
 }
 
 .headerTitle {
-    color: #ffffff !important;
-    font-size: 1.15rem !important;
+    font-size: 1.1rem !important;
     font-weight: 700 !important;
-    letter-spacing: -0.2px;
-    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    letter-spacing: -0.3px !important;
+    background: linear-gradient(120deg, #ffffff 20%, #a5b4fc 100%);
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+}
+
+.headerRoleBadge {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
 }
 
 .bellIcon {
     cursor: pointer;
-    color: var(--text-secondary) !important;
-    transition: color 0.25s, text-shadow 0.25s;
+    color: var(--text-2) !important;
+    transition: color 0.2s, text-shadow 0.2s;
 }
-
 .bellIcon:hover {
-    color: #ffffff !important;
-    text-shadow: 0 0 10px rgba(255,255,255,0.6);
+    color: #fff !important;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
 
-.headerRoleBadge {
-    font-weight: 700 !important;
-    letter-spacing: 0.8px !important;
-    font-size: 0.7rem !important;
-}
-
-/* ─── Avatar Button ──────────────────────────────────────── */
+/* ─── 7. Avatar Button ───────────────────────────────────── */
 .avatarButton {
-    background: linear-gradient(135deg, #06d6f7 0%, #4f8eff 50%, #8b5cf6 100%) !important;
+    background: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 55%, var(--violet) 100%) !important;
     border-radius: 50% !important;
-    width: 36px !important;
-    height: 36px !important;
-    min-width: 36px !important;
-    max-width: 36px !important;
+    width: 36px !important; height: 36px !important;
+    min-width: 36px !important; max-width: 36px !important;
     padding: 0 !important;
-    border: 2px solid rgba(255,255,255,0.25) !important;
-    box-shadow: 0 0 16px rgba(79,142,255,0.6), 0 0 32px rgba(139,92,246,0.3) !important;
+    border: 2px solid rgba(255,255,255,0.2) !important;
+    box-shadow: 0 0 18px rgba(79,142,255,0.55), 0 0 36px rgba(139,92,246,0.28) !important;
     cursor: pointer !important;
-    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    transition: transform 0.2s, box-shadow 0.2s !important;
     animation: avatarPulse 3s ease-in-out infinite;
 }
-
-@keyframes avatarPulse {
-    0%, 100% { box-shadow: 0 0 16px rgba(79,142,255,0.6), 0 0 32px rgba(139,92,246,0.3); }
-    50%       { box-shadow: 0 0 24px rgba(79,142,255,0.9), 0 0 48px rgba(139,92,246,0.5); }
-}
-
 .avatarButton .sapMBtnInner {
     background: transparent !important;
     border: none !important;
     border-radius: 50% !important;
     padding: 0 !important;
-    min-width: 36px !important;
-    height: 36px !important;
-    line-height: 32px !important;
+    min-width: 36px !important; height: 36px !important;
+    line-height: 34px !important;
     text-align: center !important;
-    color: #ffffff !important;
+    color: #fff !important;
     font-weight: 800 !important;
-    font-size: 0.85rem !important;
+    font-size: 0.82rem !important;
 }
-
 .avatarButton:hover {
     transform: scale(1.1) !important;
-    box-shadow: 0 0 28px rgba(6,214,247,0.8), 0 0 50px rgba(139,92,246,0.6) !important;
+    box-shadow: 0 0 30px rgba(6,214,247,0.8), 0 0 55px rgba(139,92,246,0.55) !important;
     animation: none !important;
 }
+@keyframes avatarPulse {
+    0%,100% { box-shadow: 0 0 18px rgba(79,142,255,0.55), 0 0 36px rgba(139,92,246,0.28); }
+    50%      { box-shadow: 0 0 28px rgba(79,142,255,0.85), 0 0 56px rgba(139,92,246,0.5); }
+}
 
-/* ─── Glass Cards / Panels ───────────────────────────────── */
+/* ─── 8. Glass Cards ─────────────────────────────────────── */
 .cardPanel {
     background: var(--bg-card) !important;
-    backdrop-filter: blur(20px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
-    border-radius: var(--radius-lg) !important;
+    backdrop-filter: blur(22px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
+    border-radius: var(--r-xl) !important;
     border: 1px solid var(--border-soft) !important;
     padding: 1.5rem !important;
-    box-shadow: var(--shadow-card) !important;
-    transition: border-color 0.3s ease, box-shadow 0.3s ease !important;
+    box-shadow: var(--shadow) !important;
+    transition: border-color 0.3s, box-shadow 0.3s !important;
     position: relative;
     overflow: hidden;
 }
-
 .cardPanel::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 0%, rgba(79,142,255,0.4) 50%, transparent 100%);
-    opacity: 0.8;
+    top: 0; left: 5%; right: 5%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(79,142,255,0.45), rgba(139,92,246,0.35), transparent);
 }
-
 .cardPanel:hover {
-    border-color: rgba(79,142,255,0.2) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-blue) !important;
+    border-color: var(--border-blue) !important;
+    box-shadow: var(--shadow), var(--glow-blue) !important;
 }
 
 .cardTitle {
-    font-size: 0.72rem !important;
+    font-size: 0.68rem !important;
     font-weight: 700 !important;
     text-transform: uppercase !important;
-    letter-spacing: 1.2px !important;
-    color: var(--text-secondary) !important;
+    letter-spacing: 1.4px !important;
+    color: var(--text-2) !important;
     margin-bottom: 0.75rem !important;
 }
 
-/* ─── KPI Strip Tiles ────────────────────────────────────── */
+/* ─── 9. KPI Strip ───────────────────────────────────────── */
 .kpiTile {
-    background: linear-gradient(135deg, rgba(14,22,40,0.8) 0%, rgba(20,30,55,0.6) 100%) !important;
+    background: linear-gradient(145deg, rgba(12,20,38,0.85) 0%, rgba(18,28,52,0.65) 100%) !important;
     backdrop-filter: blur(16px) !important;
     border: 1px solid var(--border-soft) !important;
-    border-radius: var(--radius-md) !important;
+    border-radius: var(--r-lg) !important;
     padding: 1rem 1.25rem !important;
     width: 100%;
-    box-shadow: var(--shadow-card);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    box-shadow: var(--shadow);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     position: relative;
     overflow: hidden;
 }
-
 .kpiTile::after {
     content: '';
     position: absolute;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-blue), var(--accent-violet));
+    bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--violet));
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s;
 }
-
 .kpiTile:hover {
     transform: translateY(-3px);
-    border-color: rgba(79,142,255,0.25) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-blue);
+    border-color: var(--border-blue) !important;
+    box-shadow: var(--shadow), var(--glow-blue);
 }
-
-.kpiTile:hover::after {
-    opacity: 1;
-}
+.kpiTile:hover::after { opacity: 1; }
 
 .kpiLabel {
-    font-size: 0.72rem !important;
-    color: var(--text-secondary) !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
+    font-size: 0.68rem !important;
     font-weight: 600 !important;
-    margin-bottom: 0.4rem !important;
+    color: var(--text-2) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.9px !important;
+    margin-bottom: 0.35rem !important;
 }
-
 .kpiValue {
-    font-size: 1.75rem !important;
+    font-size: 1.8rem !important;
     font-weight: 800 !important;
-    color: var(--text-primary) !important;
+    color: var(--text-1) !important;
     line-height: 1.1 !important;
 }
 
-/* ─── Highlight Forecast Cards ───────────────────────────── */
+/* ─── 10. Highlight Cards (Forecast Result) ───────────────── */
 .highlightCard {
-    border-radius: var(--radius-md) !important;
-    padding: 1.5rem !important;
+    border-radius: var(--r-lg) !important;
+    padding: 1.4rem !important;
     background: var(--bg-card) !important;
-    backdrop-filter: blur(16px) !important;
-    -webkit-backdrop-filter: blur(16px) !important;
+    backdrop-filter: blur(18px) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
     border: 1px solid var(--border-soft) !important;
-    box-shadow: var(--shadow-card) !important;
-    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+    box-shadow: var(--shadow) !important;
+    transition: transform 0.25s ease !important;
     position: relative;
     overflow: hidden;
 }
-
-.highlightCard:hover {
-    transform: translateY(-4px) !important;
-}
+.highlightCard:hover { transform: translateY(-4px) !important; }
 
 .blueTint {
-    border-left: 3px solid var(--accent-blue) !important;
-    background: linear-gradient(135deg, rgba(79,142,255,0.12) 0%, rgba(14,22,40,0.75) 100%) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-blue) !important;
+    border-left: 3px solid var(--blue) !important;
+    background: linear-gradient(140deg, rgba(79,142,255,0.12) 0%, rgba(12,20,38,0.78) 100%) !important;
+    box-shadow: var(--shadow), var(--glow-blue) !important;
 }
-
 .tealTint {
-    border-left: 3px solid var(--accent-teal) !important;
-    background: linear-gradient(135deg, rgba(16,217,176,0.12) 0%, rgba(14,22,40,0.75) 100%) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-teal) !important;
+    border-left: 3px solid var(--teal) !important;
+    background: linear-gradient(140deg, rgba(16,217,176,0.11) 0%, rgba(12,20,38,0.78) 100%) !important;
+    box-shadow: var(--shadow), var(--glow-teal) !important;
 }
 
 .highlightValue {
-    font-size: 3.2rem !important;
+    font-size: 3rem !important;
     font-weight: 900 !important;
     line-height: 1 !important;
-    text-shadow: 0 0 30px currentColor !important;
-    letter-spacing: -1px;
+    letter-spacing: -1.5px !important;
+    text-shadow: 0 0 28px currentColor !important;
 }
+.blueText { color: #7ab0ff !important; }
+.tealText { color: #2dd4bf !important; }
 
-.blueText  { color: #7ba7ff !important; }
-.tealText  { color: #2dd4bf !important; }
-
-/* ─── Model Stat Tiles (Bottom Row) ──────────────────────── */
+/* ─── 11. Stat Tiles (Model selector) ────────────────────── */
 .statTile {
-    background: linear-gradient(135deg, rgba(8,13,26,0.9) 0%, rgba(14,22,40,0.7) 100%) !important;
-    backdrop-filter: blur(12px) !important;
+    background: linear-gradient(145deg, rgba(6,10,22,0.9) 0%, rgba(12,20,38,0.75) 100%) !important;
+    backdrop-filter: blur(14px) !important;
     border: 1px solid var(--border-soft) !important;
-    border-radius: var(--radius-md) !important;
-    padding: 1.5rem !important;
+    border-radius: var(--r-lg) !important;
+    padding: 1.4rem !important;
     text-align: center;
     width: 100%;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
     cursor: pointer;
+    transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
 }
-
 .statTile:hover {
     transform: translateY(-3px);
-    border-color: rgba(139,92,246,0.3) !important;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5), var(--shadow-glow-violet) !important;
+    border-color: var(--border-violet) !important;
+    box-shadow: var(--shadow), var(--glow-violet) !important;
 }
-
 .activeTile {
-    background: linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(79,142,255,0.08) 100%) !important;
-    border: 1px solid rgba(139,92,246,0.5) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-violet) !important;
+    background: linear-gradient(145deg, rgba(139,92,246,0.18) 0%, rgba(79,142,255,0.08) 100%) !important;
+    border: 1px solid rgba(139,92,246,0.48) !important;
+    box-shadow: var(--shadow), var(--glow-violet) !important;
 }
-
 .tileTitle {
-    font-size: 0.72rem !important;
-    color: var(--text-secondary) !important;
-    margin-bottom: 0.6rem !important;
+    font-size: 0.68rem !important;
     font-weight: 700 !important;
+    color: var(--text-2) !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.8px !important;
+    letter-spacing: 0.9px !important;
+    margin-bottom: 0.55rem !important;
 }
-
 .tileValue {
-    font-size: 2.1rem !important;
+    font-size: 2rem !important;
     font-weight: 800 !important;
-    color: var(--text-primary) !important;
+    color: var(--text-1) !important;
 }
-
 .activeTile .tileValue {
     color: #c4b5fd !important;
-    text-shadow: 0 0 20px rgba(167,139,250,0.9) !important;
+    text-shadow: 0 0 18px rgba(167,139,250,0.85) !important;
 }
-
 .tileMetric {
-    font-size: 0.7rem !important;
-    color: var(--text-muted) !important;
+    font-size: 0.66rem !important;
+    font-weight: 500 !important;
+    color: var(--text-3) !important;
     text-transform: uppercase !important;
     letter-spacing: 0.6px !important;
     margin-top: 0.3rem !important;
 }
 
-/* ─── Alert Banner ───────────────────────────────────────── */
+/* ─── 12. Alert Banner ───────────────────────────────────── */
 .alertBanner {
-    background: linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(217,119,6,0.07) 100%) !important;
+    background: linear-gradient(140deg, rgba(245,158,11,0.11) 0%, rgba(217,119,6,0.06) 100%) !important;
     backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(245,158,11,0.3) !important;
-    border-radius: var(--radius-md) !important;
-    padding: 1rem 1.25rem !important;
-    box-shadow: 0 0 20px rgba(245,158,11,0.1), var(--shadow-card) !important;
-    position: relative;
-    overflow: hidden;
+    border: 1px solid rgba(245,158,11,0.28) !important;
+    border-radius: var(--r-lg) !important;
+    padding: 0.9rem 1.25rem !important;
+    box-shadow: var(--shadow), var(--glow-amber) !important;
+    position: relative; overflow: hidden;
 }
-
 .alertBanner::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent-amber), transparent);
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--amber), rgba(245,158,11,0.2), transparent);
 }
-
 .alertText {
     color: #fcd34d !important;
     font-weight: 600 !important;
-    font-size: 0.85rem !important;
+    font-size: 0.84rem !important;
 }
 
-/* ─── Tables ─────────────────────────────────────────────── */
-.sapMListTbl {
-    background-color: transparent !important;
-}
-
+/* ─── 13. Tables ─────────────────────────────────────────── */
+.sapMListTbl { background-color: transparent !important; }
 .sapMListTblRow {
-    background-color: rgba(14,22,40,0.5) !important;
+    background-color: rgba(12,20,38,0.5) !important;
     border-bottom: 1px solid rgba(255,255,255,0.04) !important;
-    transition: background-color 0.2s ease !important;
+    transition: background-color 0.18s !important;
 }
-
-.sapMListTblRow:hover {
-    background-color: rgba(79,142,255,0.08) !important;
-}
-
+.sapMListTblRow:hover { background-color: rgba(79,142,255,0.07) !important; }
 .sapMListTblHeaderRow {
-    background: linear-gradient(90deg, rgba(79,142,255,0.08), rgba(139,92,246,0.05)) !important;
-    border-bottom: 1px solid rgba(79,142,255,0.15) !important;
+    background: linear-gradient(90deg, rgba(79,142,255,0.07), rgba(139,92,246,0.04)) !important;
+    border-bottom: 1px solid rgba(79,142,255,0.13) !important;
 }
+.sapMText  { color: var(--text-1) !important; }
+.sapMLabel { color: var(--text-2) !important; }
+.sapMListTblCell { padding: 0.65rem 0.75rem !important; }
 
-.sapMText    { color: var(--text-primary) !important; }
-.sapMLabel   { color: var(--text-secondary) !important; }
-
-/* ─── Inputs & Selects ───────────────────────────────────── */
+/* ─── 14. Inputs & Selects ───────────────────────────────── */
+.sapMInputBase,
 .sapMInputBaseInner,
 .sapMSelect,
-.sapMBtn {
-    background: rgba(8,13,26,0.7) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: var(--text-primary) !important;
-    border-radius: var(--radius-sm) !important;
+.sapMStepInput {
+    background: rgba(6,10,22,0.75) !important;
+    border: 1px solid rgba(255,255,255,0.09) !important;
+    border-radius: var(--r-sm) !important;
+    color: var(--text-1) !important;
+    font-size: 0.875rem !important;
+}
+.sapMInputBase:focus-within,
+.sapMInputBaseInner:focus {
+    border-color: var(--blue) !important;
+    box-shadow: 0 0 0 3px rgba(79,142,255,0.18) !important;
+    outline: none !important;
 }
 
-.sapMInputBaseInner:focus,
-.sapMSelect:focus {
-    border-color: var(--accent-blue) !important;
-    box-shadow: 0 0 0 2px rgba(79,142,255,0.25) !important;
+/* ─── 15. All Buttons ────────────────────────────────────── */
+.sapMBtn .sapMBtnInner {
+    border-radius: var(--r-sm) !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+    transition: transform 0.15s, box-shadow 0.15s !important;
 }
-
-/* ─── Primary Action Button ──────────────────────────────── */
-.sapMBtnEmphasized,
+/* Emphasized / Primary Button */
 .sapMBtnEmphasized .sapMBtnInner {
-    background: linear-gradient(135deg, #4f8eff 0%, #8b5cf6 100%) !important;
+    background: linear-gradient(135deg, var(--blue) 0%, var(--violet) 100%) !important;
     border: none !important;
-    border-radius: var(--radius-sm) !important;
-    color: white !important;
+    color: #fff !important;
     font-weight: 700 !important;
     letter-spacing: 0.3px !important;
-    box-shadow: 0 4px 18px rgba(79,142,255,0.4), 0 0 0 1px rgba(255,255,255,0.1) !important;
-    transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+    box-shadow: 0 4px 18px rgba(79,142,255,0.38), 0 0 0 1px rgba(255,255,255,0.08) !important;
+}
+.sapMBtnEmphasized:hover .sapMBtnInner {
+    box-shadow: 0 8px 28px rgba(79,142,255,0.6), 0 0 40px rgba(139,92,246,0.38) !important;
+}
+.sapMBtnEmphasized:active { transform: translateY(1px) !important; }
+
+/* Reject / Danger Button */
+.sapMBtnReject .sapMBtnInner {
+    background: linear-gradient(135deg, #f43f5e, #be123c) !important;
+    border: none !important;
+    color: #fff !important;
+    box-shadow: 0 4px 16px rgba(244,63,94,0.35) !important;
 }
 
-.sapMBtnEmphasized:hover {
-    transform: translateY(-1px) !important;
-    box-shadow: 0 8px 28px rgba(79,142,255,0.6), 0 0 40px rgba(139,92,246,0.4) !important;
-}
-
-.sapMBtnEmphasized:active {
-    transform: translateY(0) !important;
-}
-
-/* ─── Profile Popover ────────────────────────────────────── */
+/* ─── 16. Profile Popover ────────────────────────────────── */
 .profilePopover .sapMPopoverCont {
-    background: rgba(6,10,24,0.96) !important;
-    backdrop-filter: blur(28px) saturate(200%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
-    border: 1px solid rgba(79,142,255,0.15) !important;
-    border-radius: var(--radius-lg) !important;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7), var(--shadow-glow-blue) !important;
+    background: rgba(5, 8, 20, 0.96) !important;
+    backdrop-filter: blur(30px) saturate(200%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(200%) !important;
+    border: 1px solid rgba(79,142,255,0.14) !important;
+    border-radius: var(--r-xl) !important;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.75), var(--glow-blue) !important;
 }
-
 .profilePopover .sapMPopoverHeader .sapMBar {
     background: transparent !important;
-    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
 }
-
 .avatarLarge {
     width: 68px; height: 68px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #06d6f7 0%, #4f8eff 50%, #8b5cf6 100%);
-    box-shadow: 0 0 28px rgba(79,142,255,0.7), 0 0 60px rgba(139,92,246,0.4);
-    border: 2px solid rgba(255,255,255,0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: linear-gradient(135deg, var(--cyan), var(--blue), var(--violet));
+    box-shadow: 0 0 30px rgba(79,142,255,0.65), 0 0 65px rgba(139,92,246,0.38);
+    border: 2px solid rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
 }
-
-.avatarLargeText {
-    font-size: 1.6rem !important;
-    font-weight: 800 !important;
-    color: #ffffff !important;
+.avatarLargeText { font-size: 1.55rem !important; font-weight: 800 !important; color: #fff !important; }
+.profileEmail    { color: var(--text-2) !important; font-size: 0.82rem !important; }
+.profileInfoBox  {
+    background: rgba(12,20,38,0.72) !important;
+    border: 1px solid rgba(255,255,255,0.06) !important;
+    border-radius: var(--r-sm) !important;
+    padding: 0.72rem !important;
 }
+.profileLabel { color: var(--text-2) !important; font-size: 0.76rem !important; font-weight: 600 !important; }
+.profileValue { color: var(--text-1) !important; font-size: 0.76rem !important; font-weight: 500 !important; }
+.roleSubtitle { color: var(--text-3) !important; font-size: 0.8rem !important; font-style: italic; }
 
-.profileEmail {
-    color: var(--text-secondary) !important;
-    font-size: 0.82rem !important;
-}
-
-.profileInfoBox {
-    background: rgba(14,22,40,0.7) !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    border-radius: var(--radius-sm) !important;
-    padding: 0.75rem !important;
-}
-
-.profileLabel {
-    color: var(--text-secondary) !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
-}
-
-.profileValue {
-    color: var(--text-primary) !important;
-    font-size: 0.78rem !important;
-    font-weight: 500 !important;
-}
-
-.roleSubtitle {
-    color: var(--text-muted) !important;
-    font-size: 0.82rem !important;
-    font-style: italic;
-}
-
-/* ─── Settings Cards ─────────────────────────────────────── */
+/* ─── 17. Settings Cards ─────────────────────────────────── */
 .settingsCard {
     background: var(--bg-card) !important;
-    backdrop-filter: blur(20px) saturate(160%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
+    backdrop-filter: blur(22px) saturate(160%) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(160%) !important;
     border: 1px solid var(--border-soft) !important;
-    border-radius: var(--radius-lg) !important;
+    border-radius: var(--r-xl) !important;
     padding: 1.5rem !important;
-    box-shadow: var(--shadow-card) !important;
+    box-shadow: var(--shadow) !important;
     height: 100%;
     transition: border-color 0.3s, box-shadow 0.3s;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
 }
-
 .settingsCard::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(79,142,255,0.35), transparent);
+    content: ''; position: absolute;
+    top: 0; left: 5%; right: 5%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(79,142,255,0.4), transparent);
 }
-
 .settingsCard:hover {
-    border-color: rgba(79,142,255,0.18) !important;
-    box-shadow: var(--shadow-card), 0 0 40px rgba(79,142,255,0.1) !important;
+    border-color: var(--border-blue) !important;
+    box-shadow: var(--shadow), var(--glow-blue) !important;
 }
-
 .settingsRow {
-    padding: 0.55rem 0;
+    padding: 0.5rem 0;
     border-bottom: 1px solid rgba(255,255,255,0.04);
 }
-
 .settingsRow:last-child { border-bottom: none; }
 
-/* ─── Semantic Color Classes ─────────────────────────────── */
+/* ─── 18. Semantic Colors ────────────────────────────────── */
 .errorText   { color: #fb7185 !important; font-weight: 700 !important; }
 .warningText { color: #fbbf24 !important; font-weight: 700 !important; }
-.successText { color: var(--accent-green) !important; font-weight: 700 !important; }
-.infoText    { color: #7ba7ff !important; font-weight: 700 !important; }
+.successText { color: var(--green) !important; font-weight: 700 !important; }
+.infoText    { color: #7ab0ff !important; font-weight: 700 !important; }
 
-/* ─── Scenario Panel ─────────────────────────────────────── */
+/* ─── 19. Scenario Panel ─────────────────────────────────── */
 .scenarioPanel {
-    background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(79,142,255,0.05) 100%) !important;
-    border: 1px solid rgba(139,92,246,0.3) !important;
-    border-radius: var(--radius-md) !important;
+    background: linear-gradient(140deg, rgba(139,92,246,0.09) 0%, rgba(79,142,255,0.04) 100%) !important;
+    border: 1px solid rgba(139,92,246,0.28) !important;
+    border-radius: var(--r-md) !important;
     padding: 1rem !important;
     margin-top: 1rem;
 }
-
 .scenarioText {
     color: #c4b5fd !important;
-    font-size: 0.875rem !important;
-    line-height: 1.7 !important;
+    font-size: 0.865rem !important;
+    line-height: 1.75 !important;
     font-style: italic;
 }
 
-/* ─── Horizon Forecast Cards ─────────────────────────────── */
+/* ─── 20. Horizon Forecast Cards ─────────────────────────── */
 .horizonCard {
-    background: rgba(8,13,26,0.6) !important;
-    border: 1px solid rgba(99,102,241,0.18) !important;
-    border-radius: var(--radius-sm) !important;
+    background: rgba(6,10,22,0.62) !important;
+    border: 1px solid rgba(99,102,241,0.15) !important;
+    border-radius: var(--r-md) !important;
     padding: 0.8rem 1rem !important;
-    margin-bottom: 0.5rem !important;
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    margin-bottom: 0.45rem !important;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
 }
-
 .horizonCard:hover {
-    background: rgba(20,30,55,0.8) !important;
-    border-color: rgba(139,92,246,0.35) !important;
-    transform: translateX(4px);
+    background: rgba(18,28,52,0.82) !important;
+    border-color: rgba(139,92,246,0.32) !important;
+    transform: translateX(5px);
 }
-
 .horizonDayLabel {
-    color: var(--text-secondary) !important;
-    font-size: 0.78rem !important;
-    font-weight: 600 !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: var(--text-2) !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.6px !important;
+    letter-spacing: 0.7px !important;
 }
-
 .horizonValue {
-    color: #c4b5fd !important;
     font-size: 1.15rem !important;
     font-weight: 800 !important;
-    text-shadow: 0 0 12px rgba(167,139,250,0.6);
+    color: #c4b5fd !important;
+    text-shadow: 0 0 14px rgba(167,139,250,0.6);
 }
 
-/* ─── Sidebar / Navigation ───────────────────────────────── */
+/* ─── 21. Sidebar / Navigation ───────────────────────────── */
 .sapTntNavLI {
-    background: rgba(4,6,15,0.9) !important;
-    border-right: 1px solid rgba(79,142,255,0.1) !important;
+    background: rgba(3,5,14,0.92) !important;
+    border-right: 1px solid rgba(79,142,255,0.09) !important;
 }
-
 .sapTntNavLIItem {
-    border-radius: var(--radius-sm) !important;
+    border-radius: var(--r-sm) !important;
     margin: 2px 8px !important;
-    transition: background 0.2s ease, box-shadow 0.2s ease !important;
+    transition: background 0.2s, box-shadow 0.2s !important;
 }
-
+.sapTntNavLIItem .sapTntNavLIItemText {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: var(--text-2) !important;
+}
 .sapTntNavLIItem:hover {
-    background: rgba(79,142,255,0.1) !important;
+    background: rgba(79,142,255,0.09) !important;
 }
-
+.sapTntNavLIItem:hover .sapTntNavLIItemText {
+    color: var(--text-1) !important;
+}
 .sapTntNavLIItemSelected,
 .sapTntNavLIItem.sapTntNavLIItemSelected {
-    background: linear-gradient(135deg, rgba(79,142,255,0.2) 0%, rgba(139,92,246,0.15) 100%) !important;
-    box-shadow: inset 3px 0 0 var(--accent-blue), 0 0 20px rgba(79,142,255,0.1) !important;
+    background: linear-gradient(135deg, rgba(79,142,255,0.18) 0%, rgba(139,92,246,0.13) 100%) !important;
+    box-shadow: inset 3px 0 0 var(--blue), 0 0 18px rgba(79,142,255,0.1) !important;
+}
+.sapTntNavLIItemSelected .sapTntNavLIItemText {
+    color: #a5c8ff !important;
+    font-weight: 600 !important;
 }
 
-/* ─── Scrollbar ──────────────────────────────────────────── */
+/* ─── 22. Status Badges ──────────────────────────────────── */
+.sapMObjStatusText {
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.5px !important;
+}
+.sapMObjStatusStateSuccess .sapMObjStatusText {
+    color: var(--green) !important;
+    text-shadow: 0 0 10px rgba(34,211,160,0.45) !important;
+}
+.sapMObjStatusStateError .sapMObjStatusText { color: #fb7185 !important; }
+.sapMObjStatusStateWarning .sapMObjStatusText { color: #fbbf24 !important; }
+.sapMObjStatusStateInformation .sapMObjStatusText { color: #7ab0ff !important; }
+
+/* ─── 23. Scrollbar ──────────────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: rgba(4,6,15,0.8); }
+::-webkit-scrollbar-track { background: rgba(3,5,14,0.8); }
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(var(--accent-blue), var(--accent-violet));
+    background: linear-gradient(180deg, var(--blue), var(--violet));
     border-radius: 99px;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
 
-/* ─── Micro-animations ───────────────────────────────────── */
+/* ─── 24. Animations ─────────────────────────────────────── */
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-}
-
 @keyframes glowPulse {
-    0%, 100% { opacity: 0.6; }
-    50%       { opacity: 1; }
+    0%,100% { opacity: 0.55; }
+    50%      { opacity: 1; }
 }
 
 .dashboardContainer > * {
-    animation: fadeInUp 0.4s ease forwards;
+    animation: fadeInUp 0.38s ease both;
 }
+.dashboardContainer > *:nth-child(2) { animation-delay: 0.05s; }
+.dashboardContainer > *:nth-child(3) { animation-delay: 0.1s; }
+.dashboardContainer > *:nth-child(4) { animation-delay: 0.15s; }
+.dashboardContainer > *:nth-child(5) { animation-delay: 0.2s; }
 
-/* ─── Status Badges ──────────────────────────────────────── */
-.sapMObjStatusText { font-weight: 700 !important; letter-spacing: 0.4px !important; }
+/* ─── 25. Chart ──────────────────────────────────────────── */
+#forecastChart { border-radius: var(--r-md); }
 
-/* Online badge green glow */
-.sapMObjStatusStateSuccess .sapMObjStatusText {
-    color: var(--accent-green) !important;
-    text-shadow: 0 0 10px rgba(34,211,160,0.5) !important;
-}
-
-/* ─── Login Page ─────────────────────────────────────────── */
-.sapMPage.mainContentBg .sapMPageHeader { display: none; }
-
-/* Login card enhancements */
+/* ─── 26. Login page tweaks ──────────────────────────────── */
 .cardPanel.sapUiMediumMargin {
     border: 1px solid rgba(79,142,255,0.2) !important;
-    box-shadow: var(--shadow-card), var(--shadow-glow-blue) !important;
-    animation: fadeInUp 0.6s ease forwards;
+    box-shadow: var(--shadow), var(--glow-blue) !important;
+    animation: fadeInUp 0.55s ease both;
 }
 
-/* ─── Chart canvas container ─────────────────────────────── */
-#forecastChart {
-    border-radius: var(--radius-sm);
+/* ─── 27. Responsive ─────────────────────────────────────── */
+@media (max-width: 960px) {
+    .dashboardContainer { padding: 1rem 1rem; }
+    .highlightValue     { font-size: 2.2rem !important; }
+    .kpiValue           { font-size: 1.4rem !important; }
 }
-
-/* ─── Responsive tweaks ──────────────────────────────────── */
-@media (max-width: 900px) {
-    .dashboardContainer { padding: 1rem; }
-    .highlightValue { font-size: 2.2rem !important; }
-    .kpiValue       { font-size: 1.4rem !important; }
+@media (max-width: 640px) {
+    .kpiValue  { font-size: 1.2rem !important; }
+    .tileValue { font-size: 1.6rem !important; }
 }
