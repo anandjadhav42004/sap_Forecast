@@ -5,29 +5,242 @@
     xmlns:core="sap.ui.core"
     displayBlock="true">
     
-    <Page showHeader="false" class="mainContentBg">
-        <VBox justifyContent="Center" alignItems="Center" height="100%" width="100%">
-            <Panel width="400px" class="cardPanel sapUiMediumMargin">
-                <VBox alignItems="Center" class="sapUiMediumMarginBottom">
-                    <core:Icon src="sap-icon://line-chart" size="3rem" color="#38bdf8" class="sapUiSmallMarginBottom" />
-                    <Title text="SAP Prognos" level="H1" class="headerTitle sapUiSmallMarginBottom" />
-                    <Text text="Enterprise Demand Forecasting" class="sapUiSmallMarginBottom" />
-                </VBox>
-                
-                <VBox width="100%">
-                    <Label text="Username" />
-                    <Input id="usernameInput" placeholder="Enter username (admin or user)" value="{/username}" class="sapUiSmallMarginBottom" submit=".onLogin" />
-                    
-                    <Label text="Password" />
-                    <Input id="passwordInput" placeholder="Enter password (admin or user)" type="Password" value="{/password}" class="sapUiMediumMarginBottom" submit=".onLogin" />
-                    
-                    <Button text="Log In" type="Emphasized" press=".onLogin" width="100%" class="sapUiSmallMarginBottom" />
-                </VBox>
-                
-                <HBox justifyContent="Center" class="sapUiSmallMarginTop">
-                    <Text text="Demo Roles: admin/admin or user/user" class="sapUiTinyMarginTop" style="color: #64748b; font-size: 0.8rem;" />
-                </HBox>
-            </Panel>
+    <Page showHeader="false" id="loginPage">
+        <core:HTML content="&lt;style&gt;
+            /* ── Login Page Full Bleed Background ── */
+            #loginPage { background: transparent !important; }
+            #loginPage .sapMPageBg { background: transparent !important; }
+
+            body, .sapUiBody {
+                background:
+                    radial-gradient(ellipse 70% 60% at 15% 0%,   rgba(79,142,255,0.18) 0%, transparent 60%),
+                    radial-gradient(ellipse 60% 55% at 85% 100%,  rgba(139,92,246,0.15) 0%, transparent 55%),
+                    radial-gradient(ellipse 100% 100% at 50% 50%, #04060f 0%, #07101f 100%) !important;
+            }
+
+            /* ── Floating Orb Decorations ── */
+            .loginOrb1, .loginOrb2 {
+                position: fixed;
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 0;
+                animation: orbFloat 9s ease-in-out infinite;
+            }
+            .loginOrb1 {
+                width: 500px; height: 500px;
+                background: radial-gradient(circle, rgba(79,142,255,0.14) 0%, transparent 70%);
+                top: -180px; left: -180px;
+            }
+            .loginOrb2 {
+                width: 420px; height: 420px;
+                background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
+                bottom: -140px; right: -140px;
+                animation-duration: 12s;
+                animation-direction: reverse;
+            }
+            @keyframes orbFloat {
+                0%,100% { transform: translate(0,0) scale(1); }
+                33%     { transform: translate(20px, 15px) scale(1.03); }
+                66%     { transform: translate(-10px, 25px) scale(0.97); }
+            }
+
+            /* ── Login Wrapper ── */
+            .loginWrapper {
+                position: relative;
+                z-index: 10;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                padding: 2rem;
+            }
+
+            /* ── Login Card ── */
+            .loginCard {
+                background: rgba(8, 13, 28, 0.90) !important;
+                backdrop-filter: blur(32px) saturate(180%) !important;
+                -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+                border: 1px solid rgba(79,142,255,0.22) !important;
+                border-radius: 26px !important;
+                padding: 3rem 2.75rem !important;
+                width: 430px;
+                max-width: 100%;
+                box-shadow:
+                    0 0 0 1px rgba(255,255,255,0.04),
+                    0 30px 80px rgba(0,0,0,0.75),
+                    0 0 80px rgba(79,142,255,0.12) !important;
+                position: relative;
+                overflow: hidden;
+                animation: cardIn 0.65s cubic-bezier(0.22,1,0.36,1) both;
+            }
+            @keyframes cardIn {
+                from { opacity:0; transform: translateY(28px) scale(0.96); }
+                to   { opacity:1; transform: translateY(0)     scale(1); }
+            }
+            .loginCard::before {
+                content:'';
+                position: absolute;
+                top: 0; left: 8%; right: 8%; height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(79,142,255,0.7), rgba(139,92,246,0.7), transparent);
+            }
+
+            /* ── Logo Area ── */
+            .loginLogo {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.8rem;
+                margin-bottom: 2.25rem;
+            }
+            .loginIconRing {
+                width: 78px; height: 78px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #06d6f7 0%, #4f8eff 50%, #8b5cf6 100%);
+                display: flex; align-items: center; justify-content: center;
+                font-size: 2.2rem;
+                box-shadow:
+                    0 0 0 8px rgba(79,142,255,0.1),
+                    0 0 50px rgba(79,142,255,0.5),
+                    0 0 100px rgba(139,92,246,0.3);
+                animation: logoPulse 3s ease-in-out infinite;
+            }
+            @keyframes logoPulse {
+                0%,100% { box-shadow: 0 0 0 8px rgba(79,142,255,0.1), 0 0 50px rgba(79,142,255,0.5), 0 0 100px rgba(139,92,246,0.3); }
+                50%     { box-shadow: 0 0 0 12px rgba(79,142,255,0.15), 0 0 70px rgba(79,142,255,0.8), 0 0 140px rgba(139,92,246,0.5); }
+            }
+            .loginAppTitle {
+                font-family: 'Inter', sans-serif;
+                font-size: 2.1rem;
+                font-weight: 900;
+                background: linear-gradient(135deg, #ffffff 20%, #a5b4fc 65%, #06d6f7 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                letter-spacing: -0.6px;
+                line-height: 1;
+            }
+            .loginAppSub {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.73rem;
+                font-weight: 600;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                color: #475569;
+            }
+
+            /* ── Divider ── */
+            .loginDivider {
+                height: 1px;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent);
+                margin: 0 0 1.75rem 0;
+            }
+
+            /* ── Field Labels ── */
+            .loginFieldLabel {
+                display: block;
+                font-family: 'Inter', sans-serif;
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 1.2px;
+                color: #64748b;
+                margin-bottom: 0.45rem;
+            }
+
+            /* Style SAP inputs inside loginCard */
+            .loginCard .sapMInputBase {
+                background: rgba(4,6,15,0.7) !important;
+                border: 1px solid rgba(79,142,255,0.2) !important;
+                border-radius: 12px !important;
+                transition: border-color 0.2s, box-shadow 0.2s !important;
+            }
+            .loginCard .sapMInputBase:focus-within {
+                border-color: rgba(79,142,255,0.6) !important;
+                box-shadow: 0 0 0 3px rgba(79,142,255,0.15), 0 0 20px rgba(79,142,255,0.1) !important;
+            }
+            .loginCard .sapMInputBaseInner {
+                color: #eef2ff !important;
+                font-family: 'Inter', sans-serif !important;
+                font-size: 0.92rem !important;
+                letter-spacing: 0.2px;
+            }
+            .loginCard .sapMInputBasePlaceholder {
+                color: #334155 !important;
+            }
+
+            /* ── Login Button ── */
+            .loginCard .sapMBtnEmphasized,
+            .loginCard .sapMBtnEmphasized .sapMBtnInner {
+                background: linear-gradient(135deg, #4f8eff 0%, #7c3aed 100%) !important;
+                border: none !important;
+                border-radius: 12px !important;
+                height: 48px !important;
+                font-size: 0.95rem !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.5px !important;
+                color: #ffffff !important;
+                box-shadow: 0 6px 24px rgba(79,142,255,0.45), 0 0 0 1px rgba(255,255,255,0.08) !important;
+                transition: transform 0.15s, box-shadow 0.15s !important;
+            }
+            .loginCard .sapMBtnEmphasized:hover {
+                transform: translateY(-2px) !important;
+                box-shadow: 0 12px 36px rgba(79,142,255,0.65), 0 0 60px rgba(139,92,246,0.4) !important;
+            }
+
+            /* ── Hint Text ── */
+            .loginHint {
+                font-family: 'Inter', sans-serif;
+                font-size: 0.74rem;
+                color: #334155;
+                text-align: center;
+                margin-top: 1.25rem;
+            }
+            .loginHint b { color: #4f8eff; }
+        &lt;/style&gt;
+        &lt;div class='loginOrb1'&gt;&lt;/div&gt;
+        &lt;div class='loginOrb2'&gt;&lt;/div&gt;
+        &lt;div class='loginWrapper'&gt;
+            &lt;div class='loginCard' id='loginCardSlot'&gt;
+                &lt;div class='loginLogo'&gt;
+                    &lt;div class='loginIconRing'&gt;📈&lt;/div&gt;
+                    &lt;div class='loginAppTitle'&gt;SAP Prognos&lt;/div&gt;
+                    &lt;div class='loginAppSub'&gt;Enterprise Demand Forecasting&lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div class='loginDivider'&gt;&lt;/div&gt;
+                &lt;label class='loginFieldLabel'&gt;Username&lt;/label&gt;
+                &lt;div id='__usernameSlot'&gt;&lt;/div&gt;
+                &lt;div style='height:1rem'&gt;&lt;/div&gt;
+                &lt;label class='loginFieldLabel'&gt;Password&lt;/label&gt;
+                &lt;div id='__passwordSlot'&gt;&lt;/div&gt;
+                &lt;div style='height:1.5rem'&gt;&lt;/div&gt;
+                &lt;div id='__loginBtnSlot'&gt;&lt;/div&gt;
+                &lt;div class='loginHint'&gt;Demo: &lt;b&gt;admin/admin&lt;/b&gt; &amp;nbsp;·&amp;nbsp; &lt;b&gt;user/user&lt;/b&gt;&lt;/div&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;" />
+
+        <!-- Actual SAP UI5 controls — rendered invisible then moved via JS -->
+        <VBox id="loginControlsBox" width="100%" justifyContent="Center" alignItems="Center">
+            <Input id="usernameInput" placeholder="Enter username" value="{/username}" width="100%" submit=".onLogin" />
+            <Input id="passwordInput" placeholder="Enter password" type="Password" value="{/password}" width="100%" submit=".onLogin" class="sapUiSmallMarginTop" />
+            <Button id="loginBtn" text="Log In" type="Emphasized" press=".onLogin" width="100%" class="sapUiSmallMarginTop" />
         </VBox>
+
+        <core:HTML content="&lt;script&gt;
+            // Move SAP UI5 inputs into the HTML card slots after rendering
+            setTimeout(function() {
+                var uSlot = document.getElementById('__usernameSlot');
+                var pSlot = document.getElementById('__passwordSlot');
+                var bSlot = document.getElementById('__loginBtnSlot');
+                var uInput = document.getElementById('usernameInput');
+                var pInput = document.getElementById('passwordInput');
+                var btn    = document.getElementById('loginBtn');
+                if (uSlot &amp;&amp; uInput) uSlot.appendChild(uInput);
+                if (pSlot &amp;&amp; pInput) pSlot.appendChild(pInput);
+                if (bSlot &amp;&amp; btn)    bSlot.appendChild(btn);
+                // Hide the original VBox wrapper
+                var box = document.getElementById('loginControlsBox');
+                if (box) box.style.display = 'none';
+            }, 200);
+        &lt;/script&gt;" />
     </Page>
 </mvc:View>
