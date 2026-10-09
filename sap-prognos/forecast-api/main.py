@@ -552,6 +552,27 @@ def create_purchase_order(req: PurchaseOrderRequest, admin_role: str = Depends(r
         logger.error(f"Failed to create purchase order: {e}")
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/bulk-purchase-orders")
+def create_bulk_purchase_orders(admin_role: str = Depends(require_admin)):
+    """Admin-only endpoint: Automatically triggers purchase orders for all SKUs below safety stock."""
+    logger.info("Bulk replenishment purchase orders triggered by administrator.")
+    try:
+        alerts = inventory_service.get_all_reorder_alerts()
+        placed_orders = []
+        for alert in alerts:
+            order_qty = alert.get("recommended_order") or 50
+            order = inventory_service.create_purchase_order(alert["store"], alert["item"], order_qty)
+            if order:
+                placed_orders.append(order)
+        return {
+            "message": f"Successfully generated {len(placed_orders)} purchase orders for all critical SKUs.",
+            "count": len(placed_orders),
+            "orders": placed_orders
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate bulk purchase orders: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.get("/orders")
 def get_orders(store: Optional[int] = None, item: Optional[int] = None):
     try:

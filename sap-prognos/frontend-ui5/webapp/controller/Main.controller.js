@@ -69,12 +69,16 @@ sap.ui.define([
             }
             
             // Ensure helper fields exist even if an older session was saved
-            if (oSessionData.role === "admin") {
+            var bIsAdmin = (oSessionData.role === "admin");
+            oSessionData.isAdmin = bIsAdmin;
+            oSessionData.isViewer = !bIsAdmin;
+
+            if (bIsAdmin) {
                 oSessionData.fullName = oSessionData.fullName || "Anand Jadhav";
                 oSessionData.roleName = oSessionData.roleName || "Administrator";
                 oSessionData.email = oSessionData.email || "anand.jadhav@sap-prognos.internal";
                 oSessionData.avatarText = oSessionData.avatarText || "AJ";
-            } else if (oSessionData.role === "user") {
+            } else {
                 oSessionData.fullName = oSessionData.fullName || "Demo User";
                 oSessionData.roleName = oSessionData.roleName || "Viewer (Read-Only)";
                 oSessionData.email = oSessionData.email || "demo.viewer@sap-prognos.internal";
@@ -84,10 +88,12 @@ sap.ui.define([
             if (!oSessionModel) {
                 oSessionModel = new JSONModel(oSessionData);
                 oCore.setModel(oSessionModel, "session");
-            } else if (oSessionData.role !== "guest") {
+            } else {
                 oSessionModel.setData(oSessionData);
             }
             this.getView().setModel(oSessionModel, "session");
+            oModel.setProperty("/isAdmin", bIsAdmin);
+            oModel.setProperty("/isViewer", !bIsAdmin);
             
             this._loadMetrics();
             this._loadReorderAlerts();
@@ -598,6 +604,14 @@ sap.ui.define([
 
         onSideNavSelect: function (oEvent) {
             var sKey = oEvent.getParameter("item").getKey();
+            var oSession = this.getView().getModel("session");
+            var sRole = oSession ? oSession.getProperty("/role") : "user";
+            
+            if ((sKey === "inventory" || sKey === "settings") && sRole !== "admin") {
+                MessageToast.show("🔒 Restricted: " + (sKey === "inventory" ? "Master Inventory & Procurement" : "System Diagnostics") + " requires Administrator clearance.");
+                return;
+            }
+
             var oContainer = this.byId("pageContainer");
             var oTarget = this.byId(sKey);
             if (oContainer && oTarget) {
@@ -755,6 +769,12 @@ sap.ui.define([
         },
 
         onTriggerPO: function (oEvent) {
+            var oSession = this.getView().getModel("session");
+            var sRole = oSession ? oSession.getProperty("/role") : "user";
+            if (sRole !== "admin") {
+                MessageToast.show("❌ Permission Denied: Only Administrators can create Purchase Orders.");
+                return;
+            }
             var oContext = oEvent.getSource().getBindingContext();
             var iStore = oContext ? parseInt(oContext.getProperty("store")) : 1;
             var iItem = oContext ? parseInt(oContext.getProperty("item")) : 10;
@@ -766,16 +786,7 @@ sap.ui.define([
                 quantity: iRecommended > 0 ? iRecommended : 50
             };
             
-            var sSaved = localStorage.getItem("sap_prognos_session");
-            var sToken = "demo-admin-bearer-token";
-            var sRole = "admin";
-            if (sSaved) {
-                try {
-                    var oS = JSON.parse(sSaved);
-                    if (oS.token) sToken = oS.token;
-                    if (oS.role) sRole = oS.role;
-                } catch(e) {}
-            }
+            var sToken = oSession.getProperty("/token") || "demo-admin-bearer-token";
             
             fetch(this._getApiBaseUrl() + "/purchase-order", {
                 method: "POST",
@@ -801,7 +812,60 @@ sap.ui.define([
             });
         },
 
+        onBulkTriggerPO: function () {
+            var oSession = this.getView().getModel("session");
+            var sRole = oSession ? oSession.getProperty("/role") : "user";
+            if (sRole !== "admin") {
+                MessageToast.show("❌ Permission Denied: Only Administrators can trigger bulk replenishment.");
+                return;
+            }
+            var sToken = oSession.getProperty("/token") || "demo-admin-bearer-token";
+            var oModel = this.getView().getModel();
+            oModel.setProperty("/isBusy", true);
+
+            fetch(this._getApiBaseUrl() + "/bulk-purchase-orders", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + sToken,
+                    "X-User-Role": sRole
+                }
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Bulk PO failed");
+                return response.json();
+            })
+            .then(data => {
+                oModel.setProperty("/isBusy", false);
+                MessageToast.show("⚡ " + data.message);
+                this._loadReorderAlerts();
+            })
+            .catch(err => {
+                oModel.setProperty("/isBusy", false);
+                console.error("Bulk PO failed", err);
+                MessageToast.show("❌ Bulk replenishment order failed.");
+            });
+        },
+
+        onCommitScenario: function () {
+            var oSession = this.getView().getModel("session");
+            var sRole = oSession ? oSession.getProperty("/role") : "user";
+            if (sRole !== "admin") {
+                MessageToast.show("❌ Restricted: Scenario commit requires Administrator authorization.");
+                return;
+            }
+            var oModel = this.getView().getModel();
+            var simForecast = oModel.getProperty("/simSimulatedForecast");
+            MessageToast.show("✅ Scenario baseline (" + simForecast + ") committed to ERP replenishment planning.");
+        },
+
         onQuickReviewOrders: function () {
+            var oSession = this.getView().getModel("session");
+            var sRole = oSession ? oSession.getProperty("/role") : "user";
+            if (sRole !== "admin") {
+                MessageToast.show("ℹ️ Read-Only Mode: Procurement actions are restricted to Administrators.");
+                return;
+            }
             var oNavContainer = this.byId("pageContainer");
             var oSideNav = this.byId("sideNavigation");
             if (oNavContainer) {

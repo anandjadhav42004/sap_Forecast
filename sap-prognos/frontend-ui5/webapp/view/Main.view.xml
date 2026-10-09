@@ -14,7 +14,7 @@
             title="User Profile &amp; Role"
             class="sapUiPopup-Std-Padding profilePopover"
             placement="Bottom"
-            contentWidth="320px">
+            contentWidth="330px">
             <content>
                 <VBox class="sapUiSmallMargin" alignItems="Center">
                     <HBox justifyContent="Center" alignItems="Center" class="avatarLarge sapUiSmallMarginBottom">
@@ -33,11 +33,15 @@
                         <VBox>
                             <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
                                 <Text text="Access Level:" class="profileLabel" />
-                                <Text text="{= ${session>/role} === 'admin' ? 'Administrator (Full Access)' : 'Viewer (Read-Only Mode)' }" class="profileValue" />
+                                <Text text="{= ${session>/role} === 'admin' ? 'Full Operational (Admin)' : 'Read-Only (Viewer)' }" class="profileValue" />
                             </HBox>
                             <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                                <Text text="Backend Clearance:" class="profileLabel" />
-                                <Text text="{= ${session>/role} === 'admin' ? 'RBAC Verified · PO Creation' : 'Read-Only Monitoring' }" class="profileValue" />
+                                <Text text="Available Modules:" class="profileLabel" />
+                                <Text text="{= ${session>/role} === 'admin' ? 'All 5 Modules + Procurement' : 'Dashboard, Simulator, Analytics' }" class="profileValue" />
+                            </HBox>
+                            <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
+                                <Text text="PO Authorization:" class="profileLabel" />
+                                <Text text="{= ${session>/role} === 'admin' ? 'Authorized (Active Token)' : 'Restricted (Admin Only)' }" class="profileValue" />
                             </HBox>
                             <HBox justifyContent="SpaceBetween">
                                 <Text text="Active Session:" class="profileLabel" />
@@ -96,7 +100,7 @@
                 
                 <!-- Role Status Badge -->
                 <ObjectStatus 
-                    text="{= ${session>/role} === 'admin' ? 'ADMINISTRATOR' : 'VIEWER' }" 
+                    text="{= ${session>/role} === 'admin' ? 'ADMINISTRATOR' : 'VIEWER (READ-ONLY)' }" 
                     state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
                     inverted="true" 
                     class="sapUiSmallMarginEnd headerRoleBadge" />
@@ -107,19 +111,19 @@
                     text="{session>/avatarText}" 
                     press=".onAvatarPress" 
                     class="avatarButton" 
-                    tooltip="User Profile &amp; Settings" />
+                    tooltip="User Profile &amp; Role" />
             </tnt:ToolHeader>
         </tnt:header>
         
-        <!-- Sidebar Navigation -->
+        <!-- Sidebar Navigation: Role-Specific Visibility -->
         <tnt:sideContent>
             <tnt:SideNavigation id="sideNavigation" itemSelect=".onSideNavSelect">
                 <tnt:NavigationList>
                     <tnt:NavigationListItem key="dashboard" text="Dashboard" icon="sap-icon://bbyd-dashboard" />
                     <tnt:NavigationListItem key="simulator" text="Simulator" icon="sap-icon://simulate" />
-                    <tnt:NavigationListItem key="inventory" text="Inventory" icon="sap-icon://inventory" />
+                    <tnt:NavigationListItem key="inventory" text="Inventory &amp; Orders" icon="sap-icon://inventory" visible="{= ${session>/role} === 'admin' }" />
                     <tnt:NavigationListItem key="analytics" text="Analytics" icon="sap-icon://business-objects-experience" />
-                    <tnt:NavigationListItem key="settings" text="Settings" icon="sap-icon://action-settings" />
+                    <tnt:NavigationListItem key="settings" text="Settings &amp; Diagnostics" icon="sap-icon://action-settings" visible="{= ${session>/role} === 'admin' }" />
                 </tnt:NavigationList>
             </tnt:SideNavigation>
         </tnt:sideContent>
@@ -142,7 +146,7 @@
                                         <HBox alignItems="Center">
                                             <Title text="Executive Supply Chain Dashboard" level="H2" class="sectionMainTitle" />
                                             <ObjectStatus 
-                                                text="{= ${session>/role} === 'admin' ? 'Full Operational Mode' : 'Monitoring Mode' }" 
+                                                text="{= ${session>/role} === 'admin' ? 'Administrator (Full Operational Access)' : 'Viewer (Read-Only Monitoring Mode)' }" 
                                                 state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
                                                 inverted="true" 
                                                 icon="{= ${session>/role} === 'admin' ? 'sap-icon://shield' : 'sap-icon://show' }"
@@ -154,6 +158,51 @@
                                         <Text text="Last refreshed: {/lastUpdated}" class="lastRefreshedText" />
                                         <Text text="Model: XGBoost v1.0.0 (Global)" class="modelBadgeText" />
                                     </VBox>
+                                </HBox>
+
+                                <!-- Role Notice: Viewer Advisory Banner (Viewer Only) -->
+                                <HBox 
+                                    visible="{= ${session>/role} !== 'admin' }" 
+                                    class="viewerNoticeBanner sapUiSmallMarginBottom" 
+                                    alignItems="Center" 
+                                    justifyContent="SpaceBetween">
+                                    <HBox alignItems="Center">
+                                        <core:Icon src="sap-icon://message-information" color="#fbbf24" class="sapUiSmallMarginEnd" />
+                                        <VBox>
+                                            <Text text="Viewer Mode Active — Read-Only Monitoring" class="viewerNoticeTitle" />
+                                            <Text text="You are viewing real-time demand forecasts and model accuracy metrics. Parameter tuning, purchase orders, and system settings require Administrator clearance." class="viewerNoticeSubtitle" />
+                                        </VBox>
+                                    </HBox>
+                                    <ObjectStatus text="READ-ONLY ACCESS" state="Warning" inverted="true" />
+                                </HBox>
+
+                                <!-- Role Notice: Administrator Workspace Banner (Admin Only) -->
+                                <HBox 
+                                    visible="{= ${session>/role} === 'admin' }" 
+                                    class="adminNoticeBanner sapUiSmallMarginBottom" 
+                                    alignItems="Center" 
+                                    justifyContent="SpaceBetween">
+                                    <HBox alignItems="Center">
+                                        <core:Icon src="sap-icon://shield" color="#60a5fa" class="sapUiSmallMarginEnd" />
+                                        <VBox>
+                                            <Text text="Administrator Operational Workspace Active" class="adminNoticeTitle" />
+                                            <Text text="Full capabilities authorized: Execute custom multi-series forecasts, trigger automated procurement purchase orders, and configure model diagnostics." class="adminNoticeSubtitle" />
+                                        </VBox>
+                                    </HBox>
+                                    <HBox>
+                                        <Button 
+                                            text="Bulk Auto-Replenish" 
+                                            icon="sap-icon://cart" 
+                                            type="Emphasized" 
+                                            press=".onBulkTriggerPO" 
+                                            class="sapUiTinyMarginEnd" 
+                                            tooltip="Automatically place purchase orders for all critical SKUs" />
+                                        <Button 
+                                            text="Manage Orders" 
+                                            icon="sap-icon://inventory" 
+                                            type="Transparent" 
+                                            press=".onQuickReviewOrders" />
+                                    </HBox>
                                 </HBox>
                                 
                                 <!-- Balanced KPI Strip -->
@@ -190,29 +239,38 @@
                                         <core:Icon src="sap-icon://alert" color="#fbbf24" class="sapUiSmallMarginEnd" />
                                         <Text text="{/reorderAlertsCount} store-item SKUs are currently flagged for inventory replenishment risks." class="alertText" />
                                     </HBox>
-                                    <Button 
-                                        id="reviewOrdersBtn"
-                                        text="{= ${session>/role} === 'admin' ? 'Review &amp; Approve Orders' : 'Inspect Stock Alerts' }" 
-                                        icon="sap-icon://order-status" 
-                                        type="Emphasized" 
-                                        press=".onQuickReviewOrders" />
+                                    <HBox>
+                                        <Button 
+                                            id="reviewOrdersBtn"
+                                            text="Review &amp; Approve Orders" 
+                                            icon="sap-icon://order-status" 
+                                            type="Emphasized" 
+                                            press=".onQuickReviewOrders" 
+                                            visible="{= ${session>/role} === 'admin' }" />
+                                        <ObjectStatus 
+                                            text="Procurement Restricted to Admin" 
+                                            state="Warning" 
+                                            icon="sap-icon://locked" 
+                                            visible="{= ${session>/role} !== 'admin' }" />
+                                    </HBox>
                                 </HBox>
 
-                                <!-- Forecast Input Form Grid -->
+                                <!-- Forecast Input Form Grid: Role-Aware Editability -->
                                 <Panel class="cardPanel sapUiSmallMarginBottom">
                                     <headerToolbar>
                                         <Toolbar height="3rem">
                                             <core:Icon src="sap-icon://filter" class="sapUiTinyMarginEnd" />
-                                            <Title text="Demand Forecasting Parameters" level="H3" />
+                                            <Title text="{= ${session>/role} === 'admin' ? 'Demand Forecasting Parameters (Admin Tuning)' : 'Demand Forecasting Model Monitor' }" level="H3" />
                                             <ToolbarSpacer />
                                             <Button 
                                                 text="Sync Store Actuals" 
                                                 icon="sap-icon://synchronize" 
                                                 type="Transparent" 
                                                 press=".onRefreshActuals" 
+                                                visible="{= ${session>/role} === 'admin' }"
                                                 tooltip="Load real historical lags for chosen store &amp; item" />
                                             <Button 
-                                                text="Execute Forecast" 
+                                                text="{= ${session>/role} === 'admin' ? 'Execute Forecast Model' : 'Run Live Inference' }" 
                                                 icon="sap-icon://energy-saving-lightbulb"
                                                 type="Emphasized" 
                                                 press=".onGetForecast" 
@@ -258,20 +316,20 @@
                                             <StepInput id="inputHorizon" value="{/horizonDays}" min="1" max="30" step="1" width="100%" />
                                         </VBox>
                                         <VBox>
-                                            <Label text="Sales Lag 1 (t-1 units)" tooltip="Previous day's actual sales" class="formFieldLabel" />
-                                            <Input value="{/salesLag1}" type="Number" width="100%" />
+                                            <Label text="Sales Lag 1 (t-1 units)" tooltip="Previous day sales (Admin editable)" class="formFieldLabel" />
+                                            <Input value="{/salesLag1}" type="Number" width="100%" editable="{= ${session>/role} === 'admin' }" />
                                         </VBox>
                                         <VBox>
-                                            <Label text="Sales Lag 7 (t-7 units)" tooltip="Sales from 7 days ago (weekly seasonal base)" class="formFieldLabel" />
-                                            <Input value="{/salesLag7}" type="Number" width="100%" />
+                                            <Label text="Sales Lag 7 (t-7 units)" tooltip="Sales from 7 days ago (Admin editable)" class="formFieldLabel" />
+                                            <Input value="{/salesLag7}" type="Number" width="100%" editable="{= ${session>/role} === 'admin' }" />
                                         </VBox>
                                         <VBox>
-                                            <Label text="7-Day Rolling Mean" tooltip="Average sales over preceding 7-day window" class="formFieldLabel" />
-                                            <Input value="{/salesRollMean7}" type="Number" width="100%" />
+                                            <Label text="7-Day Rolling Mean" tooltip="Average sales over 7-day window (Admin editable)" class="formFieldLabel" />
+                                            <Input value="{/salesRollMean7}" type="Number" width="100%" editable="{= ${session>/role} === 'admin' }" />
                                         </VBox>
                                         <VBox justifyContent="End">
                                             <Button 
-                                                text="Generate Forecast" 
+                                                text="{= ${session>/role} === 'admin' ? 'Generate Forecast' : 'Run Live Inference' }" 
                                                 icon="sap-icon://chart-axis"
                                                 type="Emphasized" 
                                                 press=".onGetForecast" 
@@ -335,11 +393,11 @@
                                     </VBox>
                                 </HBox>
                                 
-                                <!-- Top Reorder Alerts Table -->
+                                <!-- Top Reorder Alerts Table: Role-Guarded Actions -->
                                 <Panel class="cardPanel sapUiSmallMarginBottom">
                                     <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
                                         <Text text="Critical Reorder Recommendations (Top Priority)" class="cardTitle" />
-                                        <Text text="Showing high and critical safety stock breaches" class="tableSubtitle" />
+                                        <Text text="{= ${session>/role} === 'admin' ? 'Admin Action Enabled: One-Click Purchase Order Generation' : 'Read-Only View: Purchase order triggers restricted to Admins' }" class="tableSubtitle" />
                                     </HBox>
                                     <Table items="{/reorderAlerts}" noDataText="All store-item stock levels are within safe operating limits.">
                                         <columns>
@@ -347,7 +405,7 @@
                                             <Column width="20%" hAlign="End"><Text text="Current Stock" /></Column>
                                             <Column width="20%" hAlign="End"><Text text="Safety Stock" /></Column>
                                             <Column width="15%" hAlign="Center"><Text text="Stock Risk" /></Column>
-                                            <Column width="15%" hAlign="Center"><Text text="Operational Action" /></Column>
+                                            <Column width="15%" hAlign="Center"><Text text="Procurement Action" /></Column>
                                         </columns>
                                         <items>
                                             <ColumnListItem>
@@ -364,8 +422,9 @@
                                                             press=".onTriggerPO" 
                                                             visible="{= ${session>/role} === 'admin' }" />
                                                         <ObjectStatus 
-                                                            text="View Only" 
-                                                            state="None" 
+                                                            text="Locked (Admin Only)" 
+                                                            state="Warning" 
+                                                            icon="sap-icon://locked"
                                                             visible="{= ${session>/role} !== 'admin' }" />
                                                     </HBox>
                                                 </cells>
@@ -410,10 +469,22 @@
                                 
                                 <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
                                     <VBox>
-                                        <Title text="What-If Demand &amp; Replenishment Simulator" level="H2" class="sectionMainTitle" />
+                                        <Title text="{= ${session>/role} === 'admin' ? 'What-If Demand Simulator (Admin Strategy Workspace)' : 'What-If Demand Simulator (Viewer Exploratory Mode)' }" level="H2" class="sectionMainTitle" />
                                         <Text text="Evaluate hypothetical demand shocks, marketing campaigns, and seasonal spikes against lead-time inventory." class="sectionSubTitle" />
                                     </VBox>
-                                    <ObjectStatus text="Interactive Scenario Workspace" state="Information" inverted="true" />
+                                    <ObjectStatus 
+                                        text="{= ${session>/role} === 'admin' ? 'Strategy Workspace (Commit Enabled)' : 'Exploratory Mode (Isolated)' }" 
+                                        state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
+                                        inverted="true" />
+                                </HBox>
+
+                                <!-- Simulator Viewer Notice -->
+                                <HBox 
+                                    visible="{= ${session>/role} !== 'admin' }" 
+                                    class="viewerNoticeBanner sapUiSmallMarginBottom" 
+                                    alignItems="Center">
+                                    <core:Icon src="sap-icon://message-information" color="#fbbf24" class="sapUiSmallMarginEnd" />
+                                    <Text text="ℹ️ Exploratory Scenario Mode — Simulated demand shifts are isolated in your session and cannot be committed to live ERP stock." class="viewerNoticeSubtitle" />
                                 </HBox>
 
                                 <!-- Compact Responsive Two-Column Simulator Workspace -->
@@ -495,6 +566,17 @@
                                                     busy="{/isBusy}" 
                                                     width="100%" 
                                                     class="sapUiSmallMarginTop" />
+
+                                                <!-- Admin Only Scenario Baseline Action -->
+                                                <Button 
+                                                    text="⚡ Commit Scenario as Reorder Baseline" 
+                                                    icon="sap-icon://accept" 
+                                                    type="Transparent" 
+                                                    press=".onCommitScenario" 
+                                                    visible="{= ${session>/role} === 'admin' }" 
+                                                    width="100%" 
+                                                    class="sapUiTinyMarginTop" 
+                                                    tooltip="Commit simulated figures to operational reorder buffer" />
                                             </VBox>
                                         </Panel>
                                     </VBox>
@@ -562,7 +644,7 @@
 
 
                     <!-- ======================================================== -->
-                    <!-- PAGE 3: MASTER INVENTORY MANAGEMENT                     -->
+                    <!-- PAGE 3: MASTER INVENTORY MANAGEMENT (ADMIN ONLY)        -->
                     <!-- ======================================================== -->
                     <Page id="inventory" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
@@ -570,12 +652,15 @@
                                 
                                 <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
                                     <VBox>
-                                        <Title text="Master Inventory Management" level="H2" class="sectionMainTitle" />
-                                        <Text text="Enterprise catalog monitoring, replenishment triggers, and automated safety stock surveillance." class="sectionSubTitle" />
+                                        <HBox alignItems="Center">
+                                            <Title text="Master Inventory &amp; Procurement Management" level="H2" class="sectionMainTitle" />
+                                            <ObjectStatus text="Administrator Operational Module" state="Information" inverted="true" class="sapUiSmallMarginBegin" />
+                                        </HBox>
+                                        <Text text="Enterprise catalog monitoring, replenishment triggers, and automated safety stock procurement." class="sectionSubTitle" />
                                     </VBox>
                                     <ObjectStatus 
-                                        text="{= ${session>/role} === 'admin' ? 'Administrator (PO Authorization Active)' : 'Viewer (Read-Only Mode)' }" 
-                                        state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
+                                        text="Procurement Clearance: Active" 
+                                        state="Success" 
                                         inverted="true" />
                                 </HBox>
 
@@ -587,6 +672,13 @@
                                             width="340px" 
                                             liveChange=".onInventorySearch" />
                                         <HBox>
+                                            <Button 
+                                                text="⚡ Auto-Replenish Critical SKUs" 
+                                                icon="sap-icon://cart" 
+                                                type="Emphasized" 
+                                                press=".onBulkTriggerPO" 
+                                                class="sapUiSmallMarginEnd" 
+                                                tooltip="Generate purchase orders for all items below safety stock" />
                                             <Button 
                                                 text="Export Reorder CSV" 
                                                 icon="sap-icon://excel-attachment" 
@@ -611,7 +703,7 @@
                                             <Column width="110px" hAlign="End"><Text text="Days Cover" /></Column>
                                             <Column width="120px" hAlign="Center"><Text text="Risk Status" /></Column>
                                             <Column width="130px" hAlign="End"><Text text="Reorder Qty" /></Column>
-                                            <Column width="130px" hAlign="Center"><Text text="Action" /></Column>
+                                            <Column width="130px" hAlign="Center"><Text text="PO Action" /></Column>
                                         </columns>
                                         <items>
                                             <ColumnListItem>
@@ -633,11 +725,7 @@
                                                             icon="sap-icon://cart" 
                                                             type="Emphasized" 
                                                             press=".onTriggerPO" 
-                                                            visible="{= ${session>/role} === 'admin' }" />
-                                                        <ObjectStatus 
-                                                            text="Read-Only" 
-                                                            state="None" 
-                                                            visible="{= ${session>/role} !== 'admin' }" />
+                                                            tooltip="Place purchase order with backend authorization" />
                                                     </HBox>
                                                 </cells>
                                             </ColumnListItem>
@@ -733,7 +821,7 @@
 
 
                     <!-- ======================================================== -->
-                    <!-- PAGE 5: SYSTEM SETTINGS & DIAGNOSTICS                   -->
+                    <!-- PAGE 5: SYSTEM SETTINGS & DIAGNOSTICS (ADMIN ONLY)      -->
                     <!-- ======================================================== -->
                     <Page id="settings" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
@@ -742,7 +830,7 @@
                                 <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
                                     <HBox alignItems="Center">
                                         <Title text="System Diagnostics &amp; Architecture Settings" level="H2" class="sectionMainTitle" />
-                                        <ObjectStatus text="Platform Telemetry" state="Information" inverted="true" class="sapUiSmallMarginBegin" />
+                                        <ObjectStatus text="Administrator Console (Security Level 1)" state="Information" inverted="true" class="sapUiSmallMarginBegin" />
                                     </HBox>
                                     <Button text="Refresh Health Telemetry" icon="sap-icon://refresh" press=".onRefreshHealth" />
                                 </HBox>
@@ -861,11 +949,11 @@
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Role Clearance:" class="profileLabel" />
-                                                    <ObjectStatus text="{session>/roleName}" state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" inverted="true" />
+                                                    <ObjectStatus text="{session>/roleName}" state="Information" inverted="true" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Access Privileges:" class="profileLabel" />
-                                                    <Text text="{= ${session>/role} === 'admin' ? 'Full Control: Forecasting, Simulation, Purchase Orders, Settings' : 'Read-Only Monitoring: Dashboard, Simulation, Analytics, Inventory Inspection' }" class="profileValue" />
+                                                    <Text text="Full Access: Forecasting Tuning, What-If Simulation, Procurement Automation (PO Creation), System Settings" class="profileValue" />
                                                 </HBox>
                                             </VBox>
                                         </Panel>
