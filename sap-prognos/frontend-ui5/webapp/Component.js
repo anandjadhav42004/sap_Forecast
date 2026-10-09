@@ -10,10 +10,22 @@ sap.ui.define([
         init: function () {
             // Restore session from localStorage if available
             var sSavedSession = localStorage.getItem("sap_prognos_session");
-            var oSessionData = { role: "guest", username: "" };
+            var oSessionData = {
+                role: "guest",
+                username: "",
+                fullName: "Guest",
+                roleName: "Guest",
+                email: "",
+                avatarText: "--"
+            };
+            var bHasSession = false;
             if (sSavedSession) {
                 try {
-                    oSessionData = JSON.parse(sSavedSession);
+                    var parsed = JSON.parse(sSavedSession);
+                    if (parsed && parsed.role && (parsed.role === "admin" || parsed.role === "user")) {
+                        oSessionData = parsed;
+                        bHasSession = true;
+                    }
                 } catch (e) {
                     localStorage.removeItem("sap_prognos_session");
                 }
@@ -26,7 +38,16 @@ sap.ui.define([
             UIComponent.prototype.init.apply(this, arguments);
             
             // initialize the router
-            this.getRouter().initialize();
+            var oRouter = this.getRouter();
+            if (oRouter) {
+                oRouter.initialize();
+                // Route guard: if authenticated, direct to main; if not, direct to login
+                if (bHasSession) {
+                    oRouter.navTo("main");
+                } else {
+                    oRouter.navTo("login");
+                }
+            }
         }
     });
 });

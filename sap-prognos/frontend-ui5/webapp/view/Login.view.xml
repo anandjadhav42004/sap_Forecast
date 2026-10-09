@@ -3,274 +3,125 @@
     xmlns:mvc="sap.ui.core.mvc"
     xmlns="sap.m"
     xmlns:core="sap.ui.core"
+    xmlns:l="sap.ui.layout"
     displayBlock="true">
 
-    <Page showHeader="false" id="loginPage">
+    <Page showHeader="false" id="loginPage" class="fioriLoginPage">
+        <content>
+            <VBox alignItems="Center" justifyContent="Center" class="loginContainer">
 
-        <!-- ══ Inline Styles ══ -->
-        <core:HTML content="&lt;style&gt;
-            /* Page BG */
-            #loginPage, #loginPage .sapMPage, #loginPage .sapMPageBg {
-                background: transparent !important;
-            }
-            body, .sapUiBody {
-                background:
-                    radial-gradient(ellipse 70% 55% at 15% -5%,  rgba(79,142,255,0.16) 0%, transparent 58%),
-                    radial-gradient(ellipse 60% 50% at 88% 108%, rgba(139,92,246,0.13) 0%, transparent 55%),
-                    linear-gradient(160deg, #04060f 0%, #060e1c 100%) !important;
-            }
+                <!-- Main Card -->
+                <VBox class="loginCardPanel" width="100%">
+                    
+                    <!-- Header Branding -->
+                    <VBox alignItems="Center" class="loginHeaderBox">
+                        <Image src="img/sap_prognos_logo.svg" width="68px" height="68px" class="sapUiSmallMarginBottom" />
+                        <Title level="H1" text="SAP Prognos" class="loginAppTitle" />
+                        <Text text="AI Demand Forecasting &amp; Inventory Intelligence" class="loginAppSub" />
+                    </VBox>
 
-            /* Floating orbs */
-            .lp-orb { position:fixed; border-radius:50%; pointer-events:none; z-index:0; }
-            .lp-orb1 { width:520px;height:520px; background:radial-gradient(circle,rgba(79,142,255,0.13) 0%,transparent 70%); top:-200px;left:-200px; animation:lpOrb 9s ease-in-out infinite; }
-            .lp-orb2 { width:440px;height:440px; background:radial-gradient(circle,rgba(139,92,246,0.10) 0%,transparent 70%); bottom:-160px;right:-160px; animation:lpOrb 12s ease-in-out infinite reverse; }
-            @keyframes lpOrb { 0%,100%{transform:translate(0,0)} 50%{transform:translate(22px,18px)} }
+                    <!-- Role Switcher -->
+                    <VBox class="roleSelectorBox">
+                        <Label text="SELECT ACCESS MODE" class="fieldLabel" />
+                        <SegmentedButton id="roleSelector" selectedKey="{/selectedRole}" select=".onRoleChange" width="100%">
+                            <items>
+                                <SegmentedButtonItem key="admin" text="Administrator" icon="sap-icon://shield" />
+                                <SegmentedButtonItem key="user"  text="Viewer Mode"   icon="sap-icon://user-settings" />
+                            </items>
+                        </SegmentedButton>
+                    </VBox>
 
-            /* Page wrapper */
-            .lp-wrap {
-                position:relative; z-index:10;
-                display:flex; flex-direction:column; align-items:center; justify-content:center;
-                min-height:100vh; padding:2rem; gap:2rem;
-            }
+                    <!-- Quick Credential Badge -->
+                    <HBox class="credHintBox" alignItems="Center" justifyContent="SpaceBetween" press=".onFillCredentials">
+                        <HBox alignItems="Center">
+                            <core:Icon src="sap-icon://key" class="credHintIcon sapUiTinyMarginEnd" />
+                            <Text text="{/credHintText}" class="credHintText" />
+                        </HBox>
+                        <Button text="Auto-fill" type="Transparent" press=".onFillCredentials" class="autoFillBtn" />
+                    </HBox>
 
-            /* Top logo */
-            .lp-brand { display:flex; align-items:center; gap:1rem; margin-bottom:0.5rem; }
-            .lp-brand-icon {
-                width:52px;height:52px;border-radius:50%;
-                background:linear-gradient(135deg,#06d6f7,#4f8eff,#8b5cf6);
-                display:flex;align-items:center;justify-content:center;
-                font-size:1.6rem;
-                box-shadow:0 0 30px rgba(79,142,255,0.5), 0 0 60px rgba(139,92,246,0.3);
-                animation:brandPulse 3s ease-in-out infinite;
-            }
-            @keyframes brandPulse {
-                0%,100%{box-shadow:0 0 30px rgba(79,142,255,0.5),0 0 60px rgba(139,92,246,0.3)}
-                50%{box-shadow:0 0 50px rgba(79,142,255,0.8),0 0 90px rgba(139,92,246,0.5)}
-            }
-            .lp-brand-title {
-                font-family:'Inter',sans-serif; font-size:2rem; font-weight:900; letter-spacing:-0.5px;
-                background:linear-gradient(135deg,#fff 20%,#a5b4fc 65%,#06d6f7 100%);
-                -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-            }
-            .lp-brand-sub {
-                font-family:'Inter',sans-serif; font-size:0.72rem; font-weight:600;
-                letter-spacing:2.5px; text-transform:uppercase; color:#475569;
-            }
+                    <!-- Error Alert Strip -->
+                    <MessageStrip
+                        id="loginErrorStrip"
+                        text="{/errorMessage}"
+                        type="Error"
+                        showIcon="true"
+                        visible="{/hasError}"
+                        class="sapUiSmallMarginBottom" />
 
-            /* Role cards row */
-            .lp-cards { display:flex; gap:1.5rem; width:100%; max-width:820px; }
-            @media(max-width:700px){ .lp-cards{flex-direction:column;max-width:400px;} }
+                    <!-- Inputs Form -->
+                    <VBox class="loginFormBox">
+                        <Label text="USERNAME" required="true" class="fieldLabel" />
+                        <Input 
+                            id="usernameInput" 
+                            placeholder="Enter username" 
+                            value="{/username}" 
+                            width="100%" 
+                            submit=".onLogin"
+                            class="loginInput" />
 
-            /* Individual role card */
-            .lp-card {
-                flex:1; border-radius:22px; padding:2rem 1.75rem;
-                background:rgba(8,13,28,0.88);
-                backdrop-filter:blur(28px) saturate(180%);
-                -webkit-backdrop-filter:blur(28px) saturate(180%);
-                border:1px solid rgba(255,255,255,0.07);
-                box-shadow:0 24px 60px rgba(0,0,0,0.65);
-                position:relative; overflow:hidden;
-                animation:cardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
-                transition:transform 0.25s, box-shadow 0.25s, border-color 0.25s;
-            }
-            .lp-card:nth-child(2){ animation-delay:0.08s; }
-            @keyframes cardIn{ from{opacity:0;transform:translateY(24px) scale(0.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-            .lp-card:hover{ transform:translateY(-5px); }
+                        <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginTop">
+                            <Label text="PASSWORD" required="true" class="fieldLabel" />
+                            <Button 
+                                id="togglePasswordBtn" 
+                                icon="{= ${/isPasswordMasked} ? 'sap-icon://show' : 'sap-icon://hide' }" 
+                                type="Transparent" 
+                                tooltip="Toggle Password Visibility"
+                                press=".onTogglePassword" 
+                                class="togglePassBtn" />
+                        </HBox>
+                        <Input 
+                            id="passwordInput" 
+                            placeholder="Enter password" 
+                            type="{= ${/isPasswordMasked} ? 'Password' : 'Text' }" 
+                            value="{/password}" 
+                            width="100%" 
+                            submit=".onLogin"
+                            class="loginInput" />
 
-            /* Admin card accent — blue */
-            .lp-card.admin-card {
-                border-color:rgba(79,142,255,0.22) !important;
-                box-shadow:0 24px 60px rgba(0,0,0,0.65), 0 0 50px rgba(79,142,255,0.12) !important;
-            }
-            .lp-card.admin-card::before{
-                content:''; position:absolute; top:0;left:5%;right:5%;height:1px;
-                background:linear-gradient(90deg,transparent,rgba(79,142,255,0.7),rgba(99,179,255,0.5),transparent);
-            }
-            .lp-card.admin-card:hover{
-                border-color:rgba(79,142,255,0.4) !important;
-                box-shadow:0 28px 70px rgba(0,0,0,0.7), 0 0 70px rgba(79,142,255,0.22) !important;
-            }
+                        <Button 
+                            id="submitLoginBtn" 
+                            text="{= ${/selectedRole} === 'admin' ? 'Sign In as Administrator' : 'Sign In as Viewer' }" 
+                            type="Emphasized" 
+                            press=".onLogin" 
+                            width="100%" 
+                            busy="{/isAuthenticating}"
+                            class="submitLoginButton" />
+                    </VBox>
 
-            /* User card accent — violet */
-            .lp-card.user-card {
-                border-color:rgba(139,92,246,0.2) !important;
-                box-shadow:0 24px 60px rgba(0,0,0,0.65), 0 0 50px rgba(139,92,246,0.10) !important;
-            }
-            .lp-card.user-card::before{
-                content:''; position:absolute; top:0;left:5%;right:5%;height:1px;
-                background:linear-gradient(90deg,transparent,rgba(139,92,246,0.65),rgba(167,139,250,0.45),transparent);
-            }
-            .lp-card.user-card:hover{
-                border-color:rgba(139,92,246,0.38) !important;
-                box-shadow:0 28px 70px rgba(0,0,0,0.7), 0 0 70px rgba(139,92,246,0.2) !important;
-            }
+                    <!-- Role Permissions Preview -->
+                    <Panel expandable="true" expanded="false" headerText="Role Capabilities &amp; Permissions" class="permPanel">
+                        <VBox class="permList">
+                            <HBox alignItems="Center" class="permItem">
+                                <core:Icon src="sap-icon://accept" class="permIconYes" />
+                                <Text text="XGBoost &amp; Prophet Demand Forecasting" class="permText" />
+                            </HBox>
+                            <HBox alignItems="Center" class="permItem">
+                                <core:Icon src="sap-icon://accept" class="permIconYes" />
+                                <Text text="Inventory Stock Levels &amp; Risk Analytics" class="permText" />
+                            </HBox>
+                            <HBox alignItems="Center" class="permItem">
+                                <core:Icon src="sap-icon://accept" class="permIconYes" />
+                                <Text text="What-If Simulation &amp; Demand Scenarios" class="permText" />
+                            </HBox>
+                            <HBox alignItems="Center" class="permItem">
+                                <core:Icon 
+                                    src="{= ${/selectedRole} === 'admin' ? 'sap-icon://accept' : 'sap-icon://decline' }" 
+                                    class="{= ${/selectedRole} === 'admin' ? 'permIconYes' : 'permIconNo' }" />
+                                <Text 
+                                    text="Automated Purchase Order Creation (Admin Only)" 
+                                    class="{= ${/selectedRole} === 'admin' ? 'permText' : 'permTextDisabled' }" />
+                            </HBox>
+                        </VBox>
+                    </Panel>
 
-            /* Card header */
-            .lp-card-icon {
-                width:56px;height:56px;border-radius:16px;
-                display:flex;align-items:center;justify-content:center;
-                font-size:1.8rem; margin-bottom:1rem;
-            }
-            .admin-card .lp-card-icon{ background:linear-gradient(135deg,rgba(79,142,255,0.25),rgba(79,142,255,0.08)); border:1px solid rgba(79,142,255,0.3); box-shadow:0 0 20px rgba(79,142,255,0.2); }
-            .user-card  .lp-card-icon{ background:linear-gradient(135deg,rgba(139,92,246,0.25),rgba(139,92,246,0.08)); border:1px solid rgba(139,92,246,0.3); box-shadow:0 0 20px rgba(139,92,246,0.2); }
+                    <!-- Footer -->
+                    <HBox justifyContent="Center" class="loginFooter">
+                        <Text text="SAP Fiori Horizon Dark Edition · Enterprise AI Platform" class="footerText" />
+                    </HBox>
 
-            .lp-card-title{ font-family:'Inter',sans-serif; font-size:1.3rem; font-weight:800; letter-spacing:-0.3px; margin-bottom:0.2rem; }
-            .admin-card .lp-card-title{ color:#7ab0ff; }
-            .user-card  .lp-card-title{ color:#c4b5fd; }
-            .lp-card-sub{ font-family:'Inter',sans-serif; font-size:0.75rem; font-weight:500; color:#475569; text-transform:uppercase; letter-spacing:1px; margin-bottom:1.4rem; }
-
-            /* Credential badge */
-            .lp-cred {
-                display:flex;align-items:center;gap:0.6rem;
-                background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07);
-                border-radius:10px; padding:0.6rem 0.9rem; margin-bottom:1.4rem;
-            }
-            .lp-cred-icon{ font-size:0.9rem; }
-            .lp-cred-text{ font-family:'Inter',sans-serif; font-size:0.78rem; color:#64748b; }
-            .admin-card .lp-cred-val{ color:#7ab0ff; font-weight:700; }
-            .user-card  .lp-cred-val{ color:#c4b5fd; font-weight:700; }
-
-            /* Field labels */
-            .lp-label{
-                display:block; font-family:'Inter',sans-serif;
-                font-size:0.68rem; font-weight:700;
-                text-transform:uppercase; letter-spacing:1.2px;
-                color:#475569; margin-bottom:0.4rem; margin-top:0.9rem;
-            }
-            .lp-label:first-of-type{ margin-top:0; }
-
-            /* SAP Input styling inside cards */
-            .admin-card .sapMInputBase{ background:rgba(4,8,20,0.75) !important; border:1px solid rgba(79,142,255,0.18) !important; border-radius:10px !important; }
-            .admin-card .sapMInputBase:focus-within{ border-color:rgba(79,142,255,0.6) !important; box-shadow:0 0 0 3px rgba(79,142,255,0.14) !important; }
-            .user-card  .sapMInputBase{ background:rgba(4,8,20,0.75) !important; border:1px solid rgba(139,92,246,0.18) !important; border-radius:10px !important; }
-            .user-card  .sapMInputBase:focus-within{ border-color:rgba(139,92,246,0.6) !important; box-shadow:0 0 0 3px rgba(139,92,246,0.14) !important; }
-            .lp-card .sapMInputBaseInner{ color:#eef2ff !important; font-family:'Inter',sans-serif !important; font-size:0.9rem !important; }
-
-            /* Buttons */
-            .admin-card .sapMBtnEmphasized .sapMBtnInner{
-                background:linear-gradient(135deg,#4f8eff 0%,#2563eb 100%) !important;
-                border:none !important; border-radius:10px !important; height:46px !important;
-                font-weight:700 !important; font-size:0.9rem !important; color:#fff !important;
-                box-shadow:0 6px 22px rgba(79,142,255,0.45) !important;
-            }
-            .admin-card .sapMBtnEmphasized:hover .sapMBtnInner{ box-shadow:0 10px 32px rgba(79,142,255,0.65) !important; }
-
-            .user-card .sapMBtnEmphasized .sapMBtnInner{
-                background:linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%) !important;
-                border:none !important; border-radius:10px !important; height:46px !important;
-                font-weight:700 !important; font-size:0.9rem !important; color:#fff !important;
-                box-shadow:0 6px 22px rgba(139,92,246,0.45) !important;
-            }
-            .user-card .sapMBtnEmphasized:hover .sapMBtnInner{ box-shadow:0 10px 32px rgba(139,92,246,0.65) !important; }
-
-            /* Permissions list */
-            .lp-perms{ margin-top:1.2rem; display:flex; flex-direction:column; gap:0.4rem; }
-            .lp-perm-item{ display:flex;align-items:center;gap:0.5rem; font-family:'Inter',sans-serif; font-size:0.76rem; color:#64748b; }
-            .lp-perm-item.yes{ color:#94a3b8; }
-            .lp-perm-item.no { color:#334155; text-decoration:line-through; }
-            .admin-card .lp-perm-item.yes .lp-perm-dot{ color:#4f8eff; }
-            .user-card  .lp-perm-item.yes .lp-perm-dot{ color:#8b5cf6; }
-            .lp-perm-dot{ font-size:0.8rem; }
-        &lt;/style&gt;
-        &lt;div class='lp-orb lp-orb1'&gt;&lt;/div&gt;
-        &lt;div class='lp-orb lp-orb2'&gt;&lt;/div&gt;
-        &lt;div class='lp-wrap'&gt;
-
-            &lt;!-- Brand Header --&gt;
-            &lt;div&gt;
-                &lt;div class='lp-brand'&gt;
-                    &lt;div class='lp-brand-icon'&gt;📈&lt;/div&gt;
-                    &lt;div&gt;
-                        &lt;div class='lp-brand-title'&gt;SAP Prognos&lt;/div&gt;
-                        &lt;div class='lp-brand-sub'&gt;Enterprise Demand Forecasting Platform&lt;/div&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-
-            &lt;!-- Two Role Login Cards --&gt;
-            &lt;div class='lp-cards'&gt;
-
-                &lt;!-- ADMIN CARD --&gt;
-                &lt;div class='lp-card admin-card'&gt;
-                    &lt;div class='lp-card-icon'&gt;🛡️&lt;/div&gt;
-                    &lt;div class='lp-card-title'&gt;Admin Login&lt;/div&gt;
-                    &lt;div class='lp-card-sub'&gt;Full Access · All Controls&lt;/div&gt;
-                    &lt;div class='lp-cred'&gt;
-                        &lt;span class='lp-cred-icon'&gt;🔑&lt;/span&gt;
-                        &lt;span class='lp-cred-text'&gt;ID: &lt;span class='lp-cred-val'&gt;admin&lt;/span&gt; &amp;nbsp;|&amp;nbsp; Pass: &lt;span class='lp-cred-val'&gt;admin&lt;/span&gt;&lt;/span&gt;
-                    &lt;/div&gt;
-                    &lt;label class='lp-label'&gt;Username&lt;/label&gt;
-                    &lt;div id='__adminUser'&gt;&lt;/div&gt;
-                    &lt;label class='lp-label'&gt;Password&lt;/label&gt;
-                    &lt;div id='__adminPass'&gt;&lt;/div&gt;
-                    &lt;div style='height:1.2rem'&gt;&lt;/div&gt;
-                    &lt;div id='__adminBtn'&gt;&lt;/div&gt;
-                    &lt;div class='lp-perms'&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; Dashboard &amp; Forecasting&lt;/div&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; Inventory Management&lt;/div&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; Trigger Purchase Orders&lt;/div&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; System Settings&lt;/div&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-
-                &lt;!-- USER CARD --&gt;
-                &lt;div class='lp-card user-card'&gt;
-                    &lt;div class='lp-card-icon'&gt;👤&lt;/div&gt;
-                    &lt;div class='lp-card-title'&gt;Viewer Login&lt;/div&gt;
-                    &lt;div class='lp-card-sub'&gt;Read Only · Monitor Mode&lt;/div&gt;
-                    &lt;div class='lp-cred'&gt;
-                        &lt;span class='lp-cred-icon'&gt;🔑&lt;/span&gt;
-                        &lt;span class='lp-cred-text'&gt;ID: &lt;span class='lp-cred-val'&gt;user&lt;/span&gt; &amp;nbsp;|&amp;nbsp; Pass: &lt;span class='lp-cred-val'&gt;user&lt;/span&gt;&lt;/span&gt;
-                    &lt;/div&gt;
-                    &lt;label class='lp-label'&gt;Username&lt;/label&gt;
-                    &lt;div id='__userUser'&gt;&lt;/div&gt;
-                    &lt;label class='lp-label'&gt;Password&lt;/label&gt;
-                    &lt;div id='__userPass'&gt;&lt;/div&gt;
-                    &lt;div style='height:1.2rem'&gt;&lt;/div&gt;
-                    &lt;div id='__userBtn'&gt;&lt;/div&gt;
-                    &lt;div class='lp-perms'&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; Dashboard &amp; Forecasting&lt;/div&gt;
-                        &lt;div class='lp-perm-item yes'&gt;&lt;span class='lp-perm-dot'&gt;✦&lt;/span&gt; Simulator &amp; Analytics&lt;/div&gt;
-                        &lt;div class='lp-perm-item no'&gt;&lt;span class='lp-perm-dot'&gt;✕&lt;/span&gt; Inventory Management&lt;/div&gt;
-                        &lt;div class='lp-perm-item no'&gt;&lt;span class='lp-perm-dot'&gt;✕&lt;/span&gt; Purchase Orders &amp; Settings&lt;/div&gt;
-                    &lt;/div&gt;
-                &lt;/div&gt;
-            &lt;/div&gt;
-        &lt;/div&gt;" />
-
-        <!-- SAP UI5 Hidden Controls — Admin -->
-        <VBox id="adminControlsBox" visible="false">
-            <Input id="usernameInput"  placeholder="admin" value="{/username}" width="100%" submit=".onLogin" />
-            <Input id="passwordInput"  placeholder="admin" type="Password" value="{/password}" width="100%" submit=".onLogin" />
-            <Button id="adminLoginBtn" text="Login as Administrator" type="Emphasized" press=".onLogin" width="100%" />
-        </VBox>
-
-        <!-- SAP UI5 Hidden Controls — User -->
-        <VBox id="userControlsBox" visible="false">
-            <Input id="usernameInput2" placeholder="user" value="{/username2}" width="100%" submit=".onLoginUser" />
-            <Input id="passwordInput2" placeholder="user" type="Password" value="{/password2}" width="100%" submit=".onLoginUser" />
-            <Button id="userLoginBtn"  text="Login as Viewer" type="Emphasized" press=".onLoginUser" width="100%" />
-        </VBox>
-
-        <!-- Move controls into HTML slots -->
-        <core:HTML content="&lt;script&gt;
-            setTimeout(function(){
-                function mv(id, slot){
-                    var el=document.getElementById(id), s=document.getElementById(slot);
-                    if(el &amp;&amp; s){ s.appendChild(el); }
-                }
-                mv('usernameInput',  '__adminUser');
-                mv('passwordInput',  '__adminPass');
-                mv('adminLoginBtn',  '__adminBtn');
-                mv('usernameInput2', '__userUser');
-                mv('passwordInput2', '__userPass');
-                mv('userLoginBtn',   '__userBtn');
-                ['adminControlsBox','userControlsBox'].forEach(function(id){
-                    var b=document.getElementById(id);
-                    if(b) b.style.display='none';
-                });
-            }, 250);
-        &lt;/script&gt;" />
-
+                </VBox>
+            </VBox>
+        </content>
     </Page>
 </mvc:View>

@@ -8,12 +8,13 @@
     displayBlock="true">
     
     <mvc:dependents>
+        <!-- User Profile & RBAC Popover -->
         <ResponsivePopover
             id="profilePopover"
             title="User Profile &amp; Role"
             class="sapUiPopup-Std-Padding profilePopover"
             placement="Bottom"
-            contentWidth="310px">
+            contentWidth="320px">
             <content>
                 <VBox class="sapUiSmallMargin" alignItems="Center">
                     <HBox justifyContent="Center" alignItems="Center" class="avatarLarge sapUiSmallMarginBottom">
@@ -32,11 +33,15 @@
                         <VBox>
                             <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
                                 <Text text="Access Level:" class="profileLabel" />
-                                <Text text="{= ${session>/role} === 'admin' ? 'Full Control (Admin)' : 'Read-Only (Viewer)' }" class="profileValue" />
+                                <Text text="{= ${session>/role} === 'admin' ? 'Administrator (Full Access)' : 'Viewer (Read-Only Mode)' }" class="profileValue" />
                             </HBox>
                             <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                                <Text text="Permissions:" class="profileLabel" />
-                                <Text text="{= ${session>/role} === 'admin' ? 'All Pages + PO Trigger' : 'Dashboard, Simulator, Analytics' }" class="profileValue" />
+                                <Text text="Backend Clearance:" class="profileLabel" />
+                                <Text text="{= ${session>/role} === 'admin' ? 'RBAC Verified · PO Creation' : 'Read-Only Monitoring' }" class="profileValue" />
+                            </HBox>
+                            <HBox justifyContent="SpaceBetween">
+                                <Text text="Active Session:" class="profileLabel" />
+                                <Text text="{session>/username}" class="profileValue" />
                             </HBox>
                         </VBox>
                     </Panel>
@@ -54,379 +59,559 @@
     </mvc:dependents>
 
     <tnt:ToolPage id="toolPage">
-        <!-- Header -->
+        <!-- Professional Enterprise Application Header -->
         <tnt:header>
             <tnt:ToolHeader class="navyHeader">
-                <Button icon="sap-icon://menu2" type="Transparent" press=".onCollapseExpandPress" />
-                <core:Icon src="sap-icon://line-chart" color="#ffffff" class="sapUiSmallMarginBegin" />
-                <Title text="SAP Prognos — Demand Forecasting" class="headerTitle" />
+                <Button 
+                    id="navToggleBtn"
+                    icon="sap-icon://menu2" 
+                    type="Transparent" 
+                    press=".onCollapseExpandPress" 
+                    tooltip="Toggle Navigation Sidebar" />
+                
+                <!-- Logo & Brand Identity -->
+                <HBox alignItems="Center" class="sapUiSmallMarginBegin">
+                    <Image src="img/sap_prognos_logo.svg" width="30px" height="30px" class="sapUiTinyMarginEnd" />
+                    <VBox justifyContent="Center">
+                        <Title text="SAP Prognos" class="headerMainTitle" />
+                        <Text text="AI Demand Forecasting &amp; Inventory Intelligence" class="headerSubTitle" />
+                    </VBox>
+                </HBox>
+                
                 <ToolbarSpacer />
-                <core:Icon src="sap-icon://bell" color="#ffffff" class="sapUiMediumMarginEnd bellIcon" />
+
+                <!-- Current Context Breadcrumb / Page Title -->
+                <Title text="{/currentPageTitle}" class="headerPageTitleText" />
+                
+                <ToolbarSpacer />
+
+                <!-- Notification Bell with Alert Count -->
+                <Button 
+                    id="headerAlertBtn"
+                    icon="sap-icon://bell" 
+                    type="Transparent" 
+                    press=".onNotificationPress" 
+                    tooltip="Active Reorder Alerts"
+                    class="bellIconBtn sapUiSmallMarginEnd" />
+                
+                <!-- Role Status Badge -->
                 <ObjectStatus 
-                    text="{= ${session>/role} === 'admin' ? 'ADMIN' : 'VIEWER' }" 
+                    text="{= ${session>/role} === 'admin' ? 'ADMINISTRATOR' : 'VIEWER' }" 
                     state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
                     inverted="true" 
                     class="sapUiSmallMarginEnd headerRoleBadge" />
-                <Button id="avatarBtn" text="{session>/avatarText}" press=".onAvatarPress" class="avatarButton" tooltip="User Profile" />
+                
+                <!-- User Avatar Button -->
+                <Button 
+                    id="avatarBtn" 
+                    text="{session>/avatarText}" 
+                    press=".onAvatarPress" 
+                    class="avatarButton" 
+                    tooltip="User Profile &amp; Settings" />
             </tnt:ToolHeader>
         </tnt:header>
         
-        <!-- Sidebar -->
+        <!-- Sidebar Navigation -->
         <tnt:sideContent>
             <tnt:SideNavigation id="sideNavigation" itemSelect=".onSideNavSelect">
                 <tnt:NavigationList>
                     <tnt:NavigationListItem key="dashboard" text="Dashboard" icon="sap-icon://bbyd-dashboard" />
                     <tnt:NavigationListItem key="simulator" text="Simulator" icon="sap-icon://simulate" />
-                    <tnt:NavigationListItem key="inventory" text="Inventory" icon="sap-icon://inventory" visible="{= ${session>/role} === 'admin' }" />
+                    <tnt:NavigationListItem key="inventory" text="Inventory" icon="sap-icon://inventory" />
                     <tnt:NavigationListItem key="analytics" text="Analytics" icon="sap-icon://business-objects-experience" />
-                    <tnt:NavigationListItem key="settings" text="Settings" icon="sap-icon://action-settings" visible="{= ${session>/role} === 'admin' }" />
+                    <tnt:NavigationListItem key="settings" text="Settings" icon="sap-icon://action-settings" />
                 </tnt:NavigationList>
             </tnt:SideNavigation>
         </tnt:sideContent>
         
-        <!-- Main Content -->
+        <!-- Main Content Area -->
         <tnt:mainContents>
             <NavContainer id="pageContainer">
                 <pages>
-                    <!-- Page 1: Dashboard -->
+
+                    <!-- ======================================================== -->
+                    <!-- PAGE 1: EXECUTIVE DASHBOARD                             -->
+                    <!-- ======================================================== -->
                     <Page id="dashboard" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
                             <VBox class="dashboardContainer">
                             
-                            <!-- Dashboard Header with Role Badge -->
-                            <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
-                                <HBox alignItems="Center">
-                                    <Title text="Executive Supply Chain Dashboard" level="H2" />
-                                    <ObjectStatus 
-                                        text="{= ${session>/role} === 'admin' ? 'Administrator (Full Access)' : 'Viewer (Read-Only Mode)' }" 
-                                        state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
-                                        inverted="true" 
-                                        icon="{= ${session>/role} === 'admin' ? 'sap-icon://shield' : 'sap-icon://show' }"
-                                        class="sapUiSmallMarginBegin" />
-                                </HBox>
-                                <Text text="{= ${session>/role} === 'admin' ? 'Full operational actions enabled' : 'Read-only monitoring mode' }" class="roleSubtitle" />
-                            </HBox>
-                            
-                            <!-- KPI Strip -->
-                            <HBox width="100%" class="sapUiSmallMarginBottom">
-                                <VBox class="kpiTile sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Items tracked" class="kpiLabel" />
-                                    <Title text="50" class="kpiValue" />
-                                </VBox>
-                                <VBox class="kpiTile sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Avg forecast accuracy" class="kpiLabel" />
-                                    <Title text="{/accuracyAccuracy}" class="kpiValue" />
-                                </VBox>
-                                <VBox class="kpiTile sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Active reorder alerts" class="kpiLabel" />
-                                    <Title text="{/reorderAlertsCount}" class="kpiValue" />
-                                </VBox>
-                                <VBox class="kpiTile">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Last updated" class="kpiLabel" />
-                                    <Title id="lastUpdatedKpi" text="Just now" class="kpiValue" />
-                                </VBox>
-                            </HBox>
-
-                            <!-- Reorder Alert Banner -->
-                            <HBox class="alertBanner sapUiSmallMarginBottom" alignItems="Center" justifyContent="SpaceBetween">
-                                <HBox alignItems="Center">
-                                    <core:Icon src="sap-icon://alert" color="#fbbf24" class="sapUiSmallMarginEnd" />
-                                    <Text text="{/reorderAlertsCount} items are predicted to run low on stock this week — review recommended." class="alertText" />
-                                </HBox>
-                                <Button 
-                                    id="reviewOrdersBtn"
-                                    text="Review &amp; Approve Orders" 
-                                    icon="sap-icon://order-status" 
-                                    type="Emphasized" 
-                                    press=".onQuickReviewOrders" 
-                                    visible="{= ${session>/role} === 'admin' }" />
-                            </HBox>
-
-                            <!-- Input Row -->
-                            <Panel class="cardPanel sapUiSmallMarginBottom">
-                                <HBox alignItems="Center" justifyContent="SpaceBetween" width="100%">
-                                    <HBox alignItems="Center">
-                                        <Label text="Store:" class="sapUiSmallMarginEnd" />
-                                        <Select id="inputStore" selectedKey="{/store}" change=".onStoreOrItemChange" width="110px" class="sapUiSmallMarginEnd">
-                                            <core:Item key="1" text="Store 1" />
-                                            <core:Item key="2" text="Store 2" />
-                                            <core:Item key="3" text="Store 3" />
-                                            <core:Item key="4" text="Store 4" />
-                                            <core:Item key="5" text="Store 5" />
-                                            <core:Item key="6" text="Store 6" />
-                                            <core:Item key="7" text="Store 7" />
-                                            <core:Item key="8" text="Store 8" />
-                                            <core:Item key="9" text="Store 9" />
-                                            <core:Item key="10" text="Store 10" />
-                                        </Select>
-                                        
-                                        <Label text="Item:" class="sapUiSmallMarginEnd" />
-                                        <Select id="inputItem" selectedKey="{/item}" change=".onStoreOrItemChange" width="110px" class="sapUiSmallMarginEnd">
-                                            <core:Item key="1" text="Item 1" />
-                                            <core:Item key="5" text="Item 5" />
-                                            <core:Item key="10" text="Item 10" />
-                                            <core:Item key="15" text="Item 15" />
-                                            <core:Item key="20" text="Item 20" />
-                                            <core:Item key="25" text="Item 25" />
-                                            <core:Item key="30" text="Item 30" />
-                                            <core:Item key="40" text="Item 40" />
-                                            <core:Item key="50" text="Item 50" />
-                                        </Select>
-                                        
-                                        <Button icon="sap-icon://synchronize" tooltip="Auto-fetch actuals from database" press=".onRefreshActuals" class="sapUiSmallMarginEnd" />
-                                        
-                                        <Label text="Forecast Date:" class="sapUiSmallMarginEnd" />
-                                        <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="130px" class="sapUiSmallMarginEnd" />
-                                        
-                                        <Label text="Horizon (days):" class="sapUiSmallMarginEnd" tooltip="How many days to forecast ahead (1-30)" />
-                                        <StepInput id="inputHorizon" value="{/horizonDays}" min="1" max="30" step="1" width="80px" class="sapUiSmallMarginEnd" />
-                                    </HBox>
-                                    <HBox alignItems="Center" wrap="Wrap" class="sapUiSmallMarginBottom">
-                                        <Label text="Sales Lag 1:" class="sapUiSmallMarginEnd" tooltip="Sales from 1 day ago (Auto-computed)" />
-                                        <Input value="{/salesLag1}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
-                                        
-                                        <Label text="Sales Lag 7:" class="sapUiSmallMarginEnd" tooltip="Sales from 7 days ago (Auto-computed)" />
-                                        <Input value="{/salesLag7}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
-                                        
-                                        <Label text="7-Day Rolling Mean:" class="sapUiSmallMarginEnd" tooltip="Average sales over the last 7 days (Auto-computed)" />
-                                        <Input value="{/salesRollMean7}" type="Number" width="85px" class="sapUiSmallMarginEnd" />
-                                    </HBox>
-                                    <Button text="Get Forecast" type="Emphasized" press=".onGetForecast" busy="{/isBusy}" />
-                                </HBox>
-                            </Panel>
-                            
-                            <!-- Two Column Layout (Chart + Results) -->
-                            <HBox width="100%" class="sapUiSmallMarginBottom">
-                                <!-- Left Column: Chart -->
-                                <VBox class="sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="7" baseSize="0%" /></layoutData>
-                                    <Panel class="cardPanel" height="100%">
-                                        <Text text="Actual vs Forecasted Sales" class="cardTitle sapUiSmallMarginBottom" />
-                                        <core:HTML content="&lt;div style='height:350px; width:100%; position:relative; margin-top:1rem; z-index:1;'&gt;&lt;canvas id='forecastChart' style='position:absolute; left:0; top:0; width:100%; height:100%;'&gt;&lt;/canvas&gt;&lt;/div&gt;" />
-                                    </Panel>
-                                </VBox>
-                                
-                                <!-- Right Column: Result Cards -->
-                                <VBox>
-                                    <layoutData><FlexItemData growFactor="3" baseSize="0%" /></layoutData>
-                                    <VBox class="highlightCard blueTint sapUiSmallMarginBottom" width="100%">
-                                        <Text text="Forecasted demand" class="cardTitle blueText" />
-                                        <HBox alignItems="Center" justifyContent="SpaceBetween">
-                                            <Title id="resultText" text="{/forecastResult}" class="highlightValue blueText" />
-                                            <BusyIndicator visible="{/isBusy}" />
+                                <!-- Dashboard Header Section -->
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                                    <VBox>
+                                        <HBox alignItems="Center">
+                                            <Title text="Executive Supply Chain Dashboard" level="H2" class="sectionMainTitle" />
+                                            <ObjectStatus 
+                                                text="{= ${session>/role} === 'admin' ? 'Full Operational Mode' : 'Monitoring Mode' }" 
+                                                state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
+                                                inverted="true" 
+                                                icon="{= ${session>/role} === 'admin' ? 'sap-icon://shield' : 'sap-icon://show' }"
+                                                class="sapUiSmallMarginBegin" />
                                         </HBox>
+                                        <Text text="Real-time XGBoost demand forecasting and automated safety stock replenishment intelligence." class="sectionSubTitle" />
+                                    </VBox>
+                                    <VBox alignItems="End">
+                                        <Text text="Last refreshed: {/lastUpdated}" class="lastRefreshedText" />
+                                        <Text text="Model: XGBoost v1.0.0 (Global)" class="modelBadgeText" />
+                                    </VBox>
+                                </HBox>
+                                
+                                <!-- Balanced KPI Strip -->
+                                <HBox width="100%" class="sapUiSmallMarginBottom kpiStripBox">
+                                    <VBox class="kpiTile sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="ITEMS TRACKED" class="kpiLabel" />
+                                        <Title text="500 SKUs" class="kpiValue" />
+                                        <Text text="10 Stores × 50 Items Catalog" class="kpiSubtext" />
+                                    </VBox>
+                                    <VBox class="kpiTile sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="FORECAST ACCURACY" class="kpiLabel" />
+                                        <Title text="{/accuracyAccuracy}" class="kpiValue" />
+                                        <Text text="Global MAPE: {/accuracyMape}" class="kpiSubtext" />
+                                    </VBox>
+                                    <VBox class="kpiTile sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="ACTIVE REORDER ALERTS" class="kpiLabel" />
+                                        <Title text="{/reorderAlertsCount}" class="kpiValue warningKpiValue" />
+                                        <Text text="Stock Below Reorder Point" class="kpiSubtext" />
+                                    </VBox>
+                                    <VBox class="kpiTile">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="LAST INFERENCE" class="kpiLabel" />
+                                        <Title id="lastUpdatedKpi" text="{/lastUpdated}" class="kpiValue infoKpiValue" />
+                                        <Text text="In-Memory Booster Sync" class="kpiSubtext" />
+                                    </VBox>
+                                </HBox>
+
+                                <!-- Critical Alert Notification Strip -->
+                                <HBox class="alertBanner sapUiSmallMarginBottom" alignItems="Center" justifyContent="SpaceBetween">
+                                    <HBox alignItems="Center">
+                                        <core:Icon src="sap-icon://alert" color="#fbbf24" class="sapUiSmallMarginEnd" />
+                                        <Text text="{/reorderAlertsCount} store-item SKUs are currently flagged for inventory replenishment risks." class="alertText" />
+                                    </HBox>
+                                    <Button 
+                                        id="reviewOrdersBtn"
+                                        text="{= ${session>/role} === 'admin' ? 'Review &amp; Approve Orders' : 'Inspect Stock Alerts' }" 
+                                        icon="sap-icon://order-status" 
+                                        type="Emphasized" 
+                                        press=".onQuickReviewOrders" />
+                                </HBox>
+
+                                <!-- Forecast Input Form Grid -->
+                                <Panel class="cardPanel sapUiSmallMarginBottom">
+                                    <headerToolbar>
+                                        <Toolbar height="3rem">
+                                            <core:Icon src="sap-icon://filter" class="sapUiTinyMarginEnd" />
+                                            <Title text="Demand Forecasting Parameters" level="H3" />
+                                            <ToolbarSpacer />
+                                            <Button 
+                                                text="Sync Store Actuals" 
+                                                icon="sap-icon://synchronize" 
+                                                type="Transparent" 
+                                                press=".onRefreshActuals" 
+                                                tooltip="Load real historical lags for chosen store &amp; item" />
+                                            <Button 
+                                                text="Execute Forecast" 
+                                                icon="sap-icon://energy-saving-lightbulb"
+                                                type="Emphasized" 
+                                                press=".onGetForecast" 
+                                                busy="{/isBusy}" />
+                                        </Toolbar>
+                                    </headerToolbar>
+                                    <l:Grid defaultSpan="L3 M6 S12" class="sapUiSmallMarginTop">
+                                        <VBox>
+                                            <Label text="Store Location" required="true" class="formFieldLabel" />
+                                            <Select id="inputStore" selectedKey="{/store}" change=".onStoreOrItemChange" width="100%">
+                                                <core:Item key="1" text="Store 1 (Central Hub)" />
+                                                <core:Item key="2" text="Store 2 (Downtown)" />
+                                                <core:Item key="3" text="Store 3 (West Suburb)" />
+                                                <core:Item key="4" text="Store 4 (North Mall)" />
+                                                <core:Item key="5" text="Store 5 (East Outlet)" />
+                                                <core:Item key="6" text="Store 6 (Airport Express)" />
+                                                <core:Item key="7" text="Store 7 (South Plaza)" />
+                                                <core:Item key="8" text="Store 8 (Harbor District)" />
+                                                <core:Item key="9" text="Store 9 (Tech Park)" />
+                                                <core:Item key="10" text="Store 10 (Metro Station)" />
+                                            </Select>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Product / SKU" required="true" class="formFieldLabel" />
+                                            <Select id="inputItem" selectedKey="{/item}" change=".onStoreOrItemChange" width="100%">
+                                                <core:Item key="1" text="Item 1 (Fast-Moving SKU)" />
+                                                <core:Item key="5" text="Item 5 (Seasonal Goods)" />
+                                                <core:Item key="10" text="Item 10 (High Velocity)" />
+                                                <core:Item key="15" text="Item 15 (Perishable Pack)" />
+                                                <core:Item key="20" text="Item 20 (Essential Stock)" />
+                                                <core:Item key="25" text="Item 25 (Standard Retail)" />
+                                                <core:Item key="30" text="Item 30 (Bulk Item)" />
+                                                <core:Item key="40" text="Item 40 (Packaged Goods)" />
+                                                <core:Item key="50" text="Item 50 (Specialty Line)" />
+                                            </Select>
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Forecast Target Date" required="true" class="formFieldLabel" />
+                                            <DatePicker id="inputDate" value="{/date}" valueFormat="yyyy-MM-dd" displayFormat="yyyy-MM-dd" width="100%" />
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Forecast Horizon (Days)" tooltip="Multi-step recursive horizon (1-30 days)" class="formFieldLabel" />
+                                            <StepInput id="inputHorizon" value="{/horizonDays}" min="1" max="30" step="1" width="100%" />
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Sales Lag 1 (t-1 units)" tooltip="Previous day's actual sales" class="formFieldLabel" />
+                                            <Input value="{/salesLag1}" type="Number" width="100%" />
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="Sales Lag 7 (t-7 units)" tooltip="Sales from 7 days ago (weekly seasonal base)" class="formFieldLabel" />
+                                            <Input value="{/salesLag7}" type="Number" width="100%" />
+                                        </VBox>
+                                        <VBox>
+                                            <Label text="7-Day Rolling Mean" tooltip="Average sales over preceding 7-day window" class="formFieldLabel" />
+                                            <Input value="{/salesRollMean7}" type="Number" width="100%" />
+                                        </VBox>
+                                        <VBox justifyContent="End">
+                                            <Button 
+                                                text="Generate Forecast" 
+                                                icon="sap-icon://chart-axis"
+                                                type="Emphasized" 
+                                                press=".onGetForecast" 
+                                                busy="{/isBusy}" 
+                                                width="100%" />
+                                        </VBox>
+                                    </l:Grid>
+                                </Panel>
+                                
+                                <!-- Two Column Layout: Historical vs Forecast Chart + Results -->
+                                <HBox width="100%" class="sapUiSmallMarginBottom">
+                                    <!-- Left Column: Chart Container -->
+                                    <VBox class="sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="7" baseSize="0%" /></layoutData>
+                                        <Panel class="cardPanel" height="100%">
+                                            <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
+                                                <Text text="Historical Actuals vs AI Forecast &amp; Uncertainty Band" class="cardTitle" />
+                                                <HBox alignItems="Center">
+                                                    <core:Icon src="sap-icon://legend" class="sapUiTinyMarginEnd" />
+                                                    <Text text="Cyan: Actuals · Magenta: Forecast (85% CI)" class="chartLegendHint" />
+                                                </HBox>
+                                            </HBox>
+                                            <core:HTML content="&lt;div style='height:340px; width:100%; position:relative; margin-top:0.5rem; z-index:1;'&gt;&lt;canvas id='forecastChart' style='position:absolute; left:0; top:0; width:100%; height:100%;'&gt;&lt;/canvas&gt;&lt;/div&gt;" />
+                                        </Panel>
                                     </VBox>
                                     
-                                    <VBox class="highlightCard tealTint sapUiSmallMarginBottom" width="100%">
-                                        <Text text="Model accuracy (MAPE)" class="cardTitle tealText" />
-                                        <Title text="{/accuracyMape}" class="highlightValue tealText" />
-                                    </VBox>
-
-                                    <VBox class="highlightCard" width="100%">
-                                        <Text text="AI Drivers" class="cardTitle" />
-                                        <VBox items="{/explainability}">
-                                            <HBox justifyContent="SpaceBetween" width="100%" class="sapUiTinyMarginBottom">
-                                                <Text text="{factor}" />
-                                                <ObjectStatus text="{impact_percentage}%" state="{= ${direction} === 'up' ? 'Success' : 'Error' }" icon="{= ${direction} === 'up' ? 'sap-icon://trend-up' : 'sap-icon://trend-down' }" />
+                                    <!-- Right Column: Result Cards & Explainability -->
+                                    <VBox>
+                                        <layoutData><FlexItemData growFactor="3" baseSize="0%" /></layoutData>
+                                        
+                                        <!-- Forecast Result Highlight Card -->
+                                        <VBox class="highlightCard blueTint sapUiSmallMarginBottom" width="100%">
+                                            <Text text="PREDICTED DEMAND" class="cardTitle blueText" />
+                                            <HBox alignItems="Center" justifyContent="SpaceBetween">
+                                                <Title id="resultText" text="{/forecastResult}" class="highlightValue blueText" />
+                                                <BusyIndicator visible="{/isBusy}" />
                                             </HBox>
+                                            <Text text="85% Confidence: [{/confLower} – {/confUpper}]" class="confidenceBandText sapUiTinyMarginTop" />
+                                        </VBox>
+                                        
+                                        <!-- Accuracy Metrics Card -->
+                                        <VBox class="highlightCard tealTint sapUiSmallMarginBottom" width="100%">
+                                            <Text text="MODEL ACCURACY (MAPE)" class="cardTitle tealText" />
+                                            <Title text="{/accuracyMape}" class="highlightValue tealText" />
+                                            <Text text="Accuracy: {/accuracyAccuracy} across test partition" class="confidenceBandText sapUiTinyMarginTop" />
+                                        </VBox>
+
+                                        <!-- Explainable AI (XAI) Drivers Card -->
+                                        <VBox class="highlightCard" width="100%">
+                                            <Text text="TOP FORECAST DRIVERS (XAI)" class="cardTitle" />
+                                            <VBox items="{/explainability}">
+                                                <HBox justifyContent="SpaceBetween" width="100%" class="sapUiTinyMarginBottom">
+                                                    <Text text="{factor}" class="xaiFactorText" />
+                                                    <ObjectStatus 
+                                                        text="{impact_percentage}%" 
+                                                        state="{= ${direction} === 'up' ? 'Success' : 'Error' }" 
+                                                        icon="{= ${direction} === 'up' ? 'sap-icon://trend-up' : 'sap-icon://trend-down' }" />
+                                                </HBox>
+                                            </VBox>
                                         </VBox>
                                     </VBox>
-                                </VBox>
-                            </HBox>
-                            
-                            <!-- Top Forecasted Items Table -->
-                            <Panel class="cardPanel sapUiSmallMarginBottom">
-                                <Text text="Items Requiring Reorder (Top 10 Critical)" class="cardTitle sapUiSmallMarginBottom" />
-                                <Table items="{/reorderAlerts}" noDataText="No critical reorders needed">
-                                    <columns>
-                                        <Column>
-                                            <Text text="Location / Item" />
-                                        </Column>
-                                        <Column hAlign="End">
-                                            <Text text="Current Stock" />
-                                        </Column>
-                                        <Column hAlign="Center">
-                                            <Text text="Safety Stock" />
-                                        </Column>
-                                        <Column hAlign="Center">
-                                            <Text text="Status" />
-                                        </Column>
-                                        <Column hAlign="Center" visible="{= ${session>/role} === 'admin' }">
-                                            <Text text="Admin Action" />
-                                        </Column>
-                                    </columns>
-                                    <items>
-                                        <ColumnListItem>
-                                            <cells>
-                                                <Text text="Store {store} — Item {item}" />
-                                                <Text text="{currentStock} units" />
-                                                <Text text="{safetyStock} units" />
-                                                <ObjectStatus text="{statusText}" state="{trendColor}" icon="{trendIcon}" />
-                                                <Button 
-                                                    text="Trigger PO" 
-                                                    icon="sap-icon://cart" 
-                                                    type="Emphasized" 
-                                                    press=".onTriggerPO" 
-                                                    visible="{= ${session>/role} === 'admin' }" />
-                                            </cells>
-                                        </ColumnListItem>
-                                    </items>
-                                </Table>
-                            </Panel>
-                            
-                            <!-- Bottom Stat Tiles Row -->
-                            <HBox width="100%">
-                                <VBox class="statTile sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Baseline" class="tileTitle" />
-                                    <Title text="{/baselineMape}" class="tileValue" />
-                                    <Text text="MAPE" class="tileMetric" />
-                                </VBox>
-                                <VBox class="statTile sapUiSmallMarginEnd">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="Prophet" class="tileTitle" />
-                                    <Title text="{/prophetMape}" class="tileValue" />
-                                    <Text text="MAPE" class="tileMetric" />
-                                </VBox>
-                                <VBox class="statTile activeTile">
-                                    <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
-                                    <Text text="XGBoost" class="tileTitle" />
-                                    <Title text="{/accuracyMape}" class="tileValue" />
-                                    <Text text="MAPE" class="tileMetric" />
-                                </VBox>
-                            </HBox>
+                                </HBox>
+                                
+                                <!-- Top Reorder Alerts Table -->
+                                <Panel class="cardPanel sapUiSmallMarginBottom">
+                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiSmallMarginBottom">
+                                        <Text text="Critical Reorder Recommendations (Top Priority)" class="cardTitle" />
+                                        <Text text="Showing high and critical safety stock breaches" class="tableSubtitle" />
+                                    </HBox>
+                                    <Table items="{/reorderAlerts}" noDataText="All store-item stock levels are within safe operating limits.">
+                                        <columns>
+                                            <Column width="30%"><Text text="Store &amp; Item SKU" /></Column>
+                                            <Column width="20%" hAlign="End"><Text text="Current Stock" /></Column>
+                                            <Column width="20%" hAlign="End"><Text text="Safety Stock" /></Column>
+                                            <Column width="15%" hAlign="Center"><Text text="Stock Risk" /></Column>
+                                            <Column width="15%" hAlign="Center"><Text text="Operational Action" /></Column>
+                                        </columns>
+                                        <items>
+                                            <ColumnListItem>
+                                                <cells>
+                                                    <Text text="Store {store} — Item {item}" />
+                                                    <Text text="{currentStock} units" />
+                                                    <Text text="{safetyStock} units" />
+                                                    <ObjectStatus text="{statusText}" state="{trendColor}" icon="{trendIcon}" />
+                                                    <HBox justifyContent="Center">
+                                                        <Button 
+                                                            text="Trigger PO" 
+                                                            icon="sap-icon://cart" 
+                                                            type="Emphasized" 
+                                                            press=".onTriggerPO" 
+                                                            visible="{= ${session>/role} === 'admin' }" />
+                                                        <ObjectStatus 
+                                                            text="View Only" 
+                                                            state="None" 
+                                                            visible="{= ${session>/role} !== 'admin' }" />
+                                                    </HBox>
+                                                </cells>
+                                            </ColumnListItem>
+                                        </items>
+                                    </Table>
+                                </Panel>
+                                
+                                <!-- Model Benchmark Comparison Row -->
+                                <HBox width="100%">
+                                    <VBox class="statTile sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="Baseline (7-Day MA)" class="tileTitle" />
+                                        <Title text="{/baselineMape}" class="tileValue" />
+                                        <Text text="Simple Moving Average" class="tileMetric" />
+                                    </VBox>
+                                    <VBox class="statTile sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="Prophet (Sampled)" class="tileTitle" />
+                                        <Title text="{/prophetMape}" class="tileValue" />
+                                        <Text text="Additive Time Series" class="tileMetric" />
+                                    </VBox>
+                                    <VBox class="statTile activeTile">
+                                        <layoutData><FlexItemData growFactor="1" baseSize="0%" /></layoutData>
+                                        <Text text="XGBoost (Production)" class="tileTitle" />
+                                        <Title text="{/accuracyMape}" class="tileValue" />
+                                        <Text text="Global Gradient Boosting" class="tileMetric" />
+                                    </VBox>
+                                </HBox>
 
-                        </VBox>
-                    </ScrollContainer>
+                            </VBox>
+                        </ScrollContainer>
                     </Page>
                     
                     
-                    <!-- Page: Simulator -->
+                    <!-- ======================================================== -->
+                    <!-- PAGE 2: WHAT-IF DEMAND SIMULATOR                        -->
+                    <!-- ======================================================== -->
                     <Page id="simulator" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
                             <VBox class="dashboardContainer">
-                                <Title text="What-If Demand Simulator" level="H2" class="sapUiMediumMarginBottom" />
                                 
-                                <Panel class="cardPanel sapUiSmallMarginBottom">
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
                                     <VBox>
-                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Store:" class="sapUiSmallMarginEnd" width="120px" />
-                                            <Select id="simStoreSelect" selectedKey="{/simStore}" width="150px" change=".onSimStoreOrItemChange">
-                                                <core:Item key="1" text="Store 1" />
-                                                <core:Item key="2" text="Store 2" />
-                                                <core:Item key="3" text="Store 3" />
-                                                <core:Item key="4" text="Store 4" />
-                                                <core:Item key="5" text="Store 5" />
-                                                <core:Item key="6" text="Store 6" />
-                                                <core:Item key="7" text="Store 7" />
-                                                <core:Item key="8" text="Store 8" />
-                                                <core:Item key="9" text="Store 9" />
-                                                <core:Item key="10" text="Store 10" />
-                                            </Select>
-                                        </HBox>
-                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Item:" class="sapUiSmallMarginEnd" width="120px" />
-                                            <Select id="simItemSelect" selectedKey="{/simItem}" width="150px" change=".onSimStoreOrItemChange">
-                                                <core:Item key="1" text="Item 1" />
-                                                <core:Item key="5" text="Item 5" />
-                                                <core:Item key="10" text="Item 10" />
-                                                <core:Item key="15" text="Item 15" />
-                                                <core:Item key="20" text="Item 20" />
-                                                <core:Item key="25" text="Item 25" />
-                                                <core:Item key="30" text="Item 30" />
-                                                <core:Item key="40" text="Item 40" />
-                                                <core:Item key="50" text="Item 50" />
-                                            </Select>
-                                        </HBox>
-                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Demand Adjust:" class="sapUiSmallMarginEnd" width="120px" />
-                                            <Slider value="{/simDemandAdjust}" min="-50" max="100" showAdvancedTooltip="true" width="280px" class="sapUiSmallMarginEnd" />
-                                            <Text text="{/simDemandAdjust}%" />
-                                        </HBox>
-                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="Promotion (+15%):" class="sapUiSmallMarginEnd" width="120px" />
-                                            <Switch state="{/simPromotion}" customTextOn="Yes" customTextOff="No" />
-                                        </HBox>
-                                        <HBox alignItems="Center" class="sapUiSmallMarginBottom">
-                                            <Label text="High Season (+10%):" class="sapUiSmallMarginEnd" width="120px" />
-                                            <Switch state="{/simSeasonality}" customTextOn="Yes" customTextOff="No" />
-                                        </HBox>
-                                        
-                                        <Button text="Run Simulation" type="Emphasized" press=".onRunSimulation" busy="{/isBusy}" class="sapUiMediumMarginTop" />
+                                        <Title text="What-If Demand &amp; Replenishment Simulator" level="H2" class="sectionMainTitle" />
+                                        <Text text="Evaluate hypothetical demand shocks, marketing campaigns, and seasonal spikes against lead-time inventory." class="sectionSubTitle" />
                                     </VBox>
-                                </Panel>
-                                
+                                    <ObjectStatus text="Interactive Scenario Workspace" state="Information" inverted="true" />
+                                </HBox>
+
+                                <!-- Compact Responsive Two-Column Simulator Workspace -->
                                 <HBox width="100%" class="sapUiSmallMarginBottom">
-                                    <VBox class="highlightCard blueTint sapUiSmallMarginEnd" width="33%">
-                                        <Text text="Base Forecast (No Adjustments)" class="cardTitle blueText" />
-                                        <Title text="{/simCurrentForecast}" class="highlightValue blueText" />
+                                    
+                                    <!-- Left Column: Scenario Input Controls -->
+                                    <VBox class="sapUiSmallMarginEnd">
+                                        <layoutData><FlexItemData growFactor="5" baseSize="0%" /></layoutData>
+                                        <Panel class="cardPanel" height="100%">
+                                            <Text text="Scenario Configuration" class="cardTitle sapUiSmallMarginBottom" />
+                                            <VBox class="sapUiSmallMarginTop">
+                                                
+                                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                                                    <Label text="Store Target:" width="130px" class="formFieldLabel" />
+                                                    <Select id="simStoreSelect" selectedKey="{/simStore}" width="180px" change=".onSimStoreOrItemChange">
+                                                        <core:Item key="1" text="Store 1 (Central Hub)" />
+                                                        <core:Item key="2" text="Store 2 (Downtown)" />
+                                                        <core:Item key="3" text="Store 3 (West Suburb)" />
+                                                        <core:Item key="4" text="Store 4 (North Mall)" />
+                                                        <core:Item key="5" text="Store 5 (East Outlet)" />
+                                                        <core:Item key="6" text="Store 6 (Airport Express)" />
+                                                        <core:Item key="7" text="Store 7 (South Plaza)" />
+                                                        <core:Item key="8" text="Store 8 (Harbor District)" />
+                                                        <core:Item key="9" text="Store 9 (Tech Park)" />
+                                                        <core:Item key="10" text="Store 10 (Metro Station)" />
+                                                    </Select>
+                                                </HBox>
+                                                
+                                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                                                    <Label text="Product / SKU:" width="130px" class="formFieldLabel" />
+                                                    <Select id="simItemSelect" selectedKey="{/simItem}" width="180px" change=".onSimStoreOrItemChange">
+                                                        <core:Item key="1" text="Item 1 (Fast-Moving SKU)" />
+                                                        <core:Item key="5" text="Item 5 (Seasonal Goods)" />
+                                                        <core:Item key="10" text="Item 10 (High Velocity)" />
+                                                        <core:Item key="15" text="Item 15 (Perishable Pack)" />
+                                                        <core:Item key="20" text="Item 20 (Essential Stock)" />
+                                                        <core:Item key="25" text="Item 25 (Standard Retail)" />
+                                                        <core:Item key="30" text="Item 30 (Bulk Item)" />
+                                                        <core:Item key="40" text="Item 40 (Packaged Goods)" />
+                                                        <core:Item key="50" text="Item 50 (Specialty Line)" />
+                                                    </Select>
+                                                </HBox>
+                                                
+                                                <VBox class="sapUiSmallMarginBottom">
+                                                    <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                                        <Label text="Demand Adjustment Shift:" class="formFieldLabel" />
+                                                        <Text text="{/simDemandAdjust}%" class="sliderValueBadge" />
+                                                    </HBox>
+                                                    <Slider 
+                                                        value="{/simDemandAdjust}" 
+                                                        min="-50" 
+                                                        max="100" 
+                                                        showAdvancedTooltip="true" 
+                                                        width="100%" 
+                                                        class="sapUiTinyMarginTop" />
+                                                </VBox>
+                                                
+                                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                                                    <VBox>
+                                                        <Label text="Promotion Campaign (+15%):" class="formFieldLabel" />
+                                                        <Text text="Simulates regional marketing uplift" class="fieldHelpText" />
+                                                    </VBox>
+                                                    <Switch state="{/simPromotion}" customTextOn="Yes" customTextOff="No" />
+                                                </HBox>
+                                                
+                                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
+                                                    <VBox>
+                                                        <Label text="High Season Peak (+10%):" class="formFieldLabel" />
+                                                        <Text text="Simulates seasonal holiday surge" class="fieldHelpText" />
+                                                    </VBox>
+                                                    <Switch state="{/simSeasonality}" customTextOn="Yes" customTextOff="No" />
+                                                </HBox>
+                                                
+                                                <Button 
+                                                    text="Run What-If Simulation" 
+                                                    icon="sap-icon://simulate"
+                                                    type="Emphasized" 
+                                                    press=".onRunSimulation" 
+                                                    busy="{/isBusy}" 
+                                                    width="100%" 
+                                                    class="sapUiSmallMarginTop" />
+                                            </VBox>
+                                        </Panel>
                                     </VBox>
-                                    <VBox class="highlightCard tealTint sapUiSmallMarginEnd" width="33%">
-                                        <Text text="Simulated Demand" class="cardTitle tealText" />
-                                        <Title text="{/simSimulatedForecast}" class="highlightValue tealText" />
-                                    </VBox>
-                                    <VBox class="highlightCard" width="34%">
-                                        <Text text="Risk Classification" class="cardTitle" />
-                                        <ObjectStatus 
-                                            text="{/simRisk}" 
-                                            state="{= ${/simRisk} === 'CRITICAL' ? 'Error' : (${/simRisk} === 'HIGH' ? 'Warning' : 'Success')}"
-                                            icon="{= ${/simRisk} === 'CRITICAL' ? 'sap-icon://error' : (${/simRisk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}"
-                                            class="sapUiSmallMarginTop" />
+
+                                    <!-- Right Column: Simulation Results & Impact -->
+                                    <VBox>
+                                        <layoutData><FlexItemData growFactor="7" baseSize="0%" /></layoutData>
+                                        <Panel class="cardPanel" height="100%">
+                                            <Text text="Scenario Results &amp; Supply Chain Risk" class="cardTitle sapUiSmallMarginBottom" />
+                                            
+                                            <!-- Mini Results KPI Row -->
+                                            <HBox width="100%" class="sapUiSmallMarginBottom">
+                                                <VBox class="highlightCard blueTint sapUiTinyMarginEnd" width="33%">
+                                                    <Text text="BASE FORECAST" class="cardTitle blueText" />
+                                                    <Title text="{/simCurrentForecast}" class="highlightValue blueText" />
+                                                </VBox>
+                                                <VBox class="highlightCard tealTint sapUiTinyMarginEnd" width="33%">
+                                                    <Text text="SIMULATED DEMAND" class="cardTitle tealText" />
+                                                    <Title text="{/simSimulatedForecast}" class="highlightValue tealText" />
+                                                </VBox>
+                                                <VBox class="highlightCard" width="34%">
+                                                    <Text text="DEMAND SHIFT" class="cardTitle" />
+                                                    <Title text="{/simDemandDiff}" class="highlightValue" />
+                                                </VBox>
+                                            </HBox>
+
+                                            <!-- Inventory Impact & Risk Classification Box -->
+                                            <Panel class="profileInfoBox sapUiSmallMarginBottom">
+                                                <VBox>
+                                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                                                        <Text text="Risk Classification:" class="profileLabel" />
+                                                        <ObjectStatus 
+                                                            text="{/simRisk}" 
+                                                            state="{= ${/simRisk} === 'CRITICAL' ? 'Error' : (${/simRisk} === 'HIGH' ? 'Warning' : 'Success')}"
+                                                            icon="{= ${/simRisk} === 'CRITICAL' ? 'sap-icon://error' : (${/simRisk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}" />
+                                                    </HBox>
+                                                    <HBox justifyContent="SpaceBetween" alignItems="Center" class="sapUiTinyMarginBottom">
+                                                        <Text text="Inventory Impact (Units):" class="profileLabel" />
+                                                        <Text text="{/simInventoryImpact} units buffer impact" class="profileValue" />
+                                                    </HBox>
+                                                    <HBox justifyContent="SpaceBetween" alignItems="Center">
+                                                        <Text text="Replenishment Recommendation:" class="profileLabel" />
+                                                        <ObjectStatus 
+                                                            text="{= ${/simRecommendedOrder} > 0 ? 'Place Order: +' + ${/simRecommendedOrder} + ' units' : 'Stock Levels Sufficient' }" 
+                                                            state="{= ${/simRecommendedOrder} > 0 ? 'Warning' : 'Success' }" />
+                                                    </HBox>
+                                                </VBox>
+                                            </Panel>
+
+                                            <!-- AI Scenario Narrative Panel -->
+                                            <VBox visible="{= ${/simScenarioText} !== '' }" class="scenarioPanel">
+                                                <HBox alignItems="Center" class="sapUiTinyMarginBottom">
+                                                    <core:Icon src="sap-icon://ai" color="#a78bfa" class="sapUiSmallMarginEnd" />
+                                                    <Text text="AI Scenario Synthesis &amp; Operational Impact" class="cardTitle" />
+                                                </HBox>
+                                                <Text text="{/simScenarioText}" class="scenarioText" wrapping="true" />
+                                            </VBox>
+                                        </Panel>
                                     </VBox>
                                 </HBox>
-                                
-                                <Panel class="cardPanel sapUiSmallMarginBottom">
-                                    <Text text="Inventory Recommendation" class="cardTitle sapUiSmallMarginBottom" />
-                                    <HBox alignItems="Center">
-                                        <core:Icon src="sap-icon://inventory" size="2rem" class="sapUiMediumMarginEnd" color="#64748b" />
-                                        <VBox>
-                                            <Text text="Inventory Impact: {/simInventoryImpact} units" />
-                                            <ObjectStatus text="{= ${/simRecommendedOrder} > 0 ? '⚠️ Reorder ' + ${/simRecommendedOrder} + ' units' : '✅ Stock Sufficient' }" state="{= ${/simRecommendedOrder} > 0 ? 'Warning' : 'Success' }" class="sapUiSmallMarginTop" />
-                                        </VBox>
-                                    </HBox>
-                                </Panel>
-                                
-                                <!-- Scenario Explanation Narrative -->
-                                <VBox visible="{= ${/simScenarioText} !== '' }" class="scenarioPanel">
-                                    <HBox alignItems="Center" class="sapUiTinyMarginBottom">
-                                        <core:Icon src="sap-icon://ai" color="#a78bfa" class="sapUiSmallMarginEnd" />
-                                        <Text text="AI Scenario Analysis" class="cardTitle" />
-                                    </HBox>
-                                    <Text text="{/simScenarioText}" class="scenarioText" wrapping="true" />
-                                </VBox>
                                 
                             </VBox>
                         </ScrollContainer>
                     </Page>
 
-                    <!-- Page 2: Inventory -->
+
+                    <!-- ======================================================== -->
+                    <!-- PAGE 3: MASTER INVENTORY MANAGEMENT                     -->
+                    <!-- ======================================================== -->
                     <Page id="inventory" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
                             <VBox class="dashboardContainer">
-                                <Title text="Inventory Overview &amp; Risk Analysis" level="H2" class="sapUiMediumMarginBottom" />
+                                
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
+                                    <VBox>
+                                        <Title text="Master Inventory Management" level="H2" class="sectionMainTitle" />
+                                        <Text text="Enterprise catalog monitoring, replenishment triggers, and automated safety stock surveillance." class="sectionSubTitle" />
+                                    </VBox>
+                                    <ObjectStatus 
+                                        text="{= ${session>/role} === 'admin' ? 'Administrator (PO Authorization Active)' : 'Viewer (Read-Only Mode)' }" 
+                                        state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" 
+                                        inverted="true" />
+                                </HBox>
+
                                 <Panel class="cardPanel">
+                                    <!-- Search & Export Controls Toolbar -->
                                     <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiSmallMarginBottom">
-                                        <SearchField placeholder="Search by Store or Item..." width="300px" liveChange=".onInventorySearch" />
+                                        <SearchField 
+                                            placeholder="Search by Store, Item, or Risk (e.g. Critical, 2, 10)..." 
+                                            width="340px" 
+                                            liveChange=".onInventorySearch" />
                                         <HBox>
-                                            <Button text="Export CSV" icon="sap-icon://excel-attachment" press=".onExportInventoryCSV" class="sapUiSmallMarginEnd" tooltip="Export Reorder Recommendations to CSV" />
-                                            <Button text="Refresh" icon="sap-icon://refresh" press=".onRefreshInventory" />
+                                            <Button 
+                                                text="Export Reorder CSV" 
+                                                icon="sap-icon://excel-attachment" 
+                                                press=".onExportInventoryCSV" 
+                                                class="sapUiSmallMarginEnd" 
+                                                tooltip="Download replenishment recommendations to CSV" />
+                                            <Button 
+                                                text="Refresh Inventory" 
+                                                icon="sap-icon://refresh" 
+                                                press=".onRefreshInventory" />
                                         </HBox>
                                     </HBox>
-                                    <Table id="inventoryTable" items="{/fullInventory}" noDataText="Loading inventory data...">
+
+                                    <!-- Master Inventory Table with Explicit Column Formatting -->
+                                    <Table id="inventoryTable" items="{/fullInventory}" noDataText="Loading inventory catalog records from SQLite...">
                                         <columns>
-                                            <Column><Text text="Store" /></Column>
-                                            <Column><Text text="Item" /></Column>
-                                            <Column hAlign="End"><Text text="Current Stock" /></Column>
-                                            <Column hAlign="End"><Text text="Incoming" /></Column>
-                                            <Column hAlign="End"><Text text="Target Stock" /></Column>
-                                            <Column hAlign="End"><Text text="Days Cover" /></Column>
-                                            <Column hAlign="Center"><Text text="Status" /></Column>
-                                            <Column hAlign="End"><Text text="Recommended Order" /></Column>
-                                            <Column hAlign="Center" visible="{= ${session>/role} === 'admin' }"><Text text="Action" /></Column>
+                                            <Column width="70px" hAlign="Center"><Text text="Store" /></Column>
+                                            <Column width="70px" hAlign="Center"><Text text="Item" /></Column>
+                                            <Column width="110px" hAlign="End"><Text text="Current Stock" /></Column>
+                                            <Column width="100px" hAlign="End"><Text text="Incoming" /></Column>
+                                            <Column width="110px" hAlign="End"><Text text="Target Stock" /></Column>
+                                            <Column width="110px" hAlign="End"><Text text="Days Cover" /></Column>
+                                            <Column width="120px" hAlign="Center"><Text text="Risk Status" /></Column>
+                                            <Column width="130px" hAlign="End"><Text text="Reorder Qty" /></Column>
+                                            <Column width="130px" hAlign="Center"><Text text="Action" /></Column>
                                         </columns>
                                         <items>
                                             <ColumnListItem>
@@ -437,9 +622,23 @@
                                                     <Text text="{incoming_stock}" />
                                                     <Text text="{target_stock}" />
                                                     <Text text="{days_of_cover}" />
-                                                    <ObjectStatus text="{risk}" state="{= ${risk} === 'CRITICAL' ? 'Error' : (${risk} === 'HIGH' ? 'Warning' : (${risk} === 'MEDIUM' ? 'Information' : 'Success'))}" icon="{= ${risk} === 'CRITICAL' ? 'sap-icon://error' : (${risk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}" />
+                                                    <ObjectStatus 
+                                                        text="{risk}" 
+                                                        state="{= ${risk} === 'CRITICAL' ? 'Error' : (${risk} === 'HIGH' ? 'Warning' : (${risk} === 'MEDIUM' ? 'Information' : 'Success'))}" 
+                                                        icon="{= ${risk} === 'CRITICAL' ? 'sap-icon://error' : (${risk} === 'HIGH' ? 'sap-icon://warning2' : 'sap-icon://sys-enter-2')}" />
                                                     <Text text="{recommended_order}" />
-                                                    <Button text="Trigger PO" icon="sap-icon://cart" type="Emphasized" press=".onTriggerPO" visible="{= ${session>/role} === 'admin' }" />
+                                                    <HBox justifyContent="Center">
+                                                        <Button 
+                                                            text="Trigger PO" 
+                                                            icon="sap-icon://cart" 
+                                                            type="Emphasized" 
+                                                            press=".onTriggerPO" 
+                                                            visible="{= ${session>/role} === 'admin' }" />
+                                                        <ObjectStatus 
+                                                            text="Read-Only" 
+                                                            state="None" 
+                                                            visible="{= ${session>/role} !== 'admin' }" />
+                                                    </HBox>
                                                 </cells>
                                             </ColumnListItem>
                                         </items>
@@ -449,43 +648,72 @@
                         </ScrollContainer>
                     </Page>
                     
-                    <!-- Page 3: Analytics -->
+
+                    <!-- ======================================================== -->
+                    <!-- PAGE 4: ANALYTICS & ANOMALY DETECTION                   -->
+                    <!-- ======================================================== -->
                     <Page id="analytics" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
                             <VBox class="dashboardContainer">
-                                <Title text="Advanced Analytics &amp; Model Performance" level="H2" class="sapUiMediumMarginBottom" />
+                                
+                                <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
+                                    <VBox>
+                                        <Title text="Model Performance &amp; Anomaly Analytics" level="H2" class="sectionMainTitle" />
+                                        <Text text="Empirical model benchmark evaluation and statistical outlier anomaly surveillance." class="sectionSubTitle" />
+                                    </VBox>
+                                    <ObjectStatus text="Analytics Intelligence" state="Information" inverted="true" />
+                                </HBox>
+
                                 <HBox width="100%">
+                                    <!-- Left Section: Model Performance Benchmark -->
                                     <VBox width="50%" class="sapUiSmallMarginEnd">
                                         <Panel class="cardPanel" height="100%">
-                                            <Text text="Model Benchmark (MAPE %)" class="cardTitle sapUiSmallMarginBottom" />
+                                            <Text text="Model Benchmark Comparison (MAPE %)" class="cardTitle sapUiSmallMarginBottom" />
+                                            <Text text="Evaluation across 500 store-item time series. XGBoost evaluated globally with autoregressive lag features; Prophet evaluated on sample series; Baseline represents a 7-day moving average." class="fieldHelpText sapUiSmallMarginBottom" />
+                                            
                                             <VBox class="sapUiSmallMarginTop">
                                                 <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom">
-                                                    <Text text="Baseline (7-Day MA)" />
+                                                    <Text text="Baseline (7-Day Moving Average)" class="profileLabel" />
                                                     <Text text="{/baselineMape}" class="errorText" />
                                                 </HBox>
                                                 <ProgressIndicator percentValue="{= parseFloat(${/baselineMape}) }" displayValue="{/baselineMape}" state="Error" />
                                                 
                                                 <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiSmallMarginTop">
-                                                    <Text text="Prophet (Sampled)" />
+                                                    <Text text="Prophet (Sampled Time-Series)" class="profileLabel" />
                                                     <Text text="{/prophetMape}" class="warningText" />
                                                 </HBox>
                                                 <ProgressIndicator percentValue="{= parseFloat(${/prophetMape}) }" displayValue="{/prophetMape}" state="Warning" />
                                                 
                                                 <HBox justifyContent="SpaceBetween" class="sapUiTinyMarginBottom sapUiSmallMarginTop">
-                                                    <Text text="XGBoost (Production)" />
-                                                    <Text text="{/accuracyMape}" class="successText" />
+                                                    <Text text="XGBoost (Production Global Model)" class="profileLabel" />
+                                                    <Text text="{/accuracyMape} (Leader)" class="successText" />
                                                 </HBox>
                                                 <ProgressIndicator percentValue="{= parseFloat(${/accuracyMape}) }" displayValue="{/accuracyMape}" state="Success" />
+
+                                                <Panel class="profileInfoBox sapUiSmallMarginTop">
+                                                    <Text text="Key Takeaway: The global XGBoost model achieves an accuracy lift of 60.8% error reduction over baseline by capturing cross-series patterns, day-of-week seasonality, and momentum lags." class="fieldHelpText" />
+                                                </Panel>
                                             </VBox>
                                         </Panel>
                                     </VBox>
+
+                                    <!-- Right Section: Statistical Anomaly Detection Engine -->
                                     <VBox width="50%">
                                         <Panel class="cardPanel" height="100%">
-                                            <Text text="Anomaly Detection Prototype" class="cardTitle sapUiSmallMarginBottom" />
-                                            <Text text="Detects sales spikes/dips > 2 std deviations" class="sapUiSmallMarginBottom sapUiTinyMarginTop" />
-                                            <Button text="Run Anomaly Scan (Demo Store 2/Item 10)" type="Emphasized" press=".onRunAnomalies" busy="{/isBusyAnomalies}" />
-                                            <VBox id="anomalyResults" class="sapUiSmallMarginTop" visible="{= ${/anomalies}.length > 0 }">
-                                                <Text text="Found {/anomaliesCount} anomalies in recent history." class="warningText sapUiSmallMarginBottom" />
+                                            <Text text="Statistical Outlier &amp; Anomaly Detection" class="cardTitle sapUiSmallMarginBottom" />
+                                            <Text text="Two-tailed Z-score outlier detector (|Z| &gt; 2.0). Flags unusual demand surges or stockout dips to protect autoregressive lags from distortion." class="fieldHelpText sapUiSmallMarginBottom" />
+                                            
+                                            <Button 
+                                                text="Scan Anomalies (Store 2 / Item 10 Demo)" 
+                                                icon="sap-icon://synchronize"
+                                                type="Emphasized" 
+                                                press=".onRunAnomalies" 
+                                                busy="{/isBusyAnomalies}" 
+                                                width="100%" 
+                                                class="sapUiSmallMarginBottom" />
+                                            
+                                            <VBox id="anomalyResults" class="sapUiSmallMarginTop" visible="{= ${/anomalies}.length &gt; 0 }">
+                                                <Text text="Detected {/anomaliesCount} statistical demand anomalies in test window:" class="warningText sapUiSmallMarginBottom" />
                                                 <List items="{/anomalies}">
                                                     <StandardListItem 
                                                         title="{anomaly_type} — {date}" 
@@ -498,20 +726,25 @@
                                         </Panel>
                                     </VBox>
                                 </HBox>
+
                             </VBox>
                         </ScrollContainer>
                     </Page>
 
-                    <!-- Page 4: Settings & Diagnostics -->
+
+                    <!-- ======================================================== -->
+                    <!-- PAGE 5: SYSTEM SETTINGS & DIAGNOSTICS                   -->
+                    <!-- ======================================================== -->
                     <Page id="settings" showHeader="false">
                         <ScrollContainer horizontal="false" vertical="true" height="100%" class="mainContentBg">
                             <VBox class="dashboardContainer">
+                                
                                 <HBox alignItems="Center" justifyContent="SpaceBetween" class="sapUiMediumMarginBottom">
                                     <HBox alignItems="Center">
-                                        <Title text="System Settings &amp; Model Diagnostics" level="H2" />
-                                        <ObjectStatus text="Admin Operational Console" state="Information" inverted="true" class="sapUiSmallMarginBegin" />
+                                        <Title text="System Diagnostics &amp; Architecture Settings" level="H2" class="sectionMainTitle" />
+                                        <ObjectStatus text="Platform Telemetry" state="Information" inverted="true" class="sapUiSmallMarginBegin" />
                                     </HBox>
-                                    <Button text="Refresh Health" icon="sap-icon://refresh" press=".onRefreshHealth" />
+                                    <Button text="Refresh Health Telemetry" icon="sap-icon://refresh" press=".onRefreshHealth" />
                                 </HBox>
 
                                 <!-- Grid of Settings / Diagnostics Cards -->
@@ -526,11 +759,11 @@
                                             <VBox class="sapUiTinyMarginTop">
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Production Model:" class="profileLabel" />
-                                                    <Text text="XGBoost Regressor (Multi-Series)" class="profileValue" />
+                                                    <Text text="XGBoost Regressor (Booster)" class="profileValue" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Deployed Version:" class="profileLabel" />
-                                                    <Text text="XGBoost v1.0.0 (Production Stable)" class="profileValue" />
+                                                    <Text text="XGBoost v1.0.0 (Trained &amp; Validated)" class="profileValue" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Engineered Features:" class="profileLabel" />
@@ -538,11 +771,11 @@
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Uncertainty Quantification:" class="profileLabel" />
-                                                    <Text text="Empirical Residual Bands (85% CI)" class="profileValue" />
+                                                    <Text text="Empirical Residual Error Bands (85% CI)" class="profileValue" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Granularity:" class="profileLabel" />
-                                                    <Text text="Daily Store-Item Level (Hierarchical)" class="profileValue" />
+                                                    <Text text="Daily Store-Item Level (500 SKUs)" class="profileValue" />
                                                 </HBox>
                                             </VBox>
                                         </Panel>
@@ -573,8 +806,8 @@
                                                     <Text text="Port 8000 (FastAPI v{/backendVersion})" class="profileValue" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
-                                                    <Text text="OpenAPI Documentation:" class="profileLabel" />
-                                                    <Text text="Available at /docs &amp; /openapi.json" class="profileValue" />
+                                                    <Text text="API Documentation:" class="profileLabel" />
+                                                    <Text text="Swagger UI at /docs &amp; OpenAPI Spec" class="profileValue" />
                                                 </HBox>
                                             </VBox>
                                         </Panel>
@@ -615,11 +848,11 @@
                                         <Panel class="settingsCard" height="100%">
                                             <HBox alignItems="Center" class="sapUiSmallMarginBottom">
                                                 <core:Icon src="sap-icon://user-settings" color="#f59e0b" class="sapUiSmallMarginEnd" />
-                                                <Text text="Active Identity &amp; RBAC Control" class="cardTitle" />
+                                                <Text text="Active Session &amp; Security Clearance" class="cardTitle" />
                                             </HBox>
                                             <VBox class="sapUiTinyMarginTop">
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
-                                                    <Text text="Authenticated User:" class="profileLabel" />
+                                                    <Text text="Authenticated Identity:" class="profileLabel" />
                                                     <Text text="{session>/fullName} ({session>/username})" class="profileValue" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
@@ -628,11 +861,11 @@
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
                                                     <Text text="Role Clearance:" class="profileLabel" />
-                                                    <ObjectStatus text="{session>/roleName}" state="Information" inverted="true" />
+                                                    <ObjectStatus text="{session>/roleName}" state="{= ${session>/role} === 'admin' ? 'Information' : 'Warning' }" inverted="true" />
                                                 </HBox>
                                                 <HBox justifyContent="SpaceBetween" class="settingsRow">
-                                                    <Text text="Access Permissions:" class="profileLabel" />
-                                                    <Text text="Full R/W, PO Trigger, Analytics, Config" class="profileValue" />
+                                                    <Text text="Access Privileges:" class="profileLabel" />
+                                                    <Text text="{= ${session>/role} === 'admin' ? 'Full Control: Forecasting, Simulation, Purchase Orders, Settings' : 'Read-Only Monitoring: Dashboard, Simulation, Analytics, Inventory Inspection' }" class="profileValue" />
                                                 </HBox>
                                             </VBox>
                                         </Panel>

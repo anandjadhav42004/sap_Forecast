@@ -16,7 +16,11 @@ sap.ui.define([
                 salesRollMean7: 41.7,
                 horizonDays: 7,
                 forecastResult: "---",
+                confLower: "---",
+                confUpper: "---",
                 isBusy: false,
+                lastUpdated: "Initializing...",
+                currentPageTitle: "Executive Dashboard",
                 reorderAlertsCount: 0,
                 reorderAlerts: [],
                 fullInventory: [],
@@ -28,6 +32,7 @@ sap.ui.define([
                 simSeasonality: true,
                 simCurrentForecast: "---",
                 simSimulatedForecast: "---",
+                simDemandDiff: "+0.0 units",
                 simInventoryImpact: 0,
                 simRecommendedOrder: 0,
                 simRisk: "---",
@@ -48,12 +53,12 @@ sap.ui.define([
             var oSessionModel = oCore.getModel("session");
             var sSavedSession = localStorage.getItem("sap_prognos_session");
             var oSessionData = { 
-                role: "guest", 
-                username: "",
-                fullName: "Guest",
-                roleName: "Guest",
-                email: "",
-                avatarText: "--"
+                role: "admin", 
+                username: "admin",
+                fullName: "Anand Jadhav",
+                roleName: "Administrator",
+                email: "anand.jadhav@sap-prognos.internal",
+                avatarText: "AJ"
             };
             if (sSavedSession) {
                 try {
@@ -104,6 +109,8 @@ sap.ui.define([
                     oModel.setProperty("/date", data.next_date);
                     this._currentHistory = data.history || [];
                     this._setupChart(null, null, null, this._currentHistory);
+                    // Automatically trigger initial forecast to populate Predicted Demand card immediately
+                    this.onGetForecast();
                 })
                 .catch(err => {
                     console.error("Failed to load store/item data", err);
@@ -500,6 +507,8 @@ sap.ui.define([
                     // Parse float and fix to 1 decimal place
                     var formattedResult = parseFloat(predictedVal).toFixed(1) + " units";
                     oModel.setProperty("/forecastResult", formattedResult);
+                    oModel.setProperty("/confLower", lowerVal !== undefined ? parseFloat(lowerVal).toFixed(1) + " units" : "---");
+                    oModel.setProperty("/confUpper", upperVal !== undefined ? parseFloat(upperVal).toFixed(1) + " units" : "---");
                     oModel.setProperty("/explainability", data.explainability);
                     
                     // Use full multi-day horizon for chart if available
@@ -510,7 +519,9 @@ sap.ui.define([
                         this._setupChart(predictedVal, lowerVal, upperVal, historyForChart);
                     }
                     oModel.setProperty("/lastUpdated", new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
-                    this.byId("lastUpdatedKpi").setText(oModel.getProperty("/lastUpdated"));
+                    if (this.byId("lastUpdatedKpi")) {
+                        this.byId("lastUpdatedKpi").setText(oModel.getProperty("/lastUpdated"));
+                    }
                     
                     MessageToast.show("Forecast generated: " + formattedResult + " (" + (data.horizon_days || 1) + "-day horizon)");
                 })
@@ -564,13 +575,19 @@ sap.ui.define([
                 var adjustedForecast = (data.adjusted_forecast !== undefined) ? data.adjusted_forecast : data.simulated_forecast;
                 var shortageVal = (data.shortage !== undefined) ? data.shortage : (data.inventory_impact_units !== undefined ? data.inventory_impact_units : 0);
                 
-                oModel.setProperty("/simCurrentForecast", (baseForecast !== undefined ? parseFloat(baseForecast).toFixed(1) : "0") + " units");
-                oModel.setProperty("/simSimulatedForecast", (adjustedForecast !== undefined ? parseFloat(adjustedForecast).toFixed(1) : "0") + " units");
+                var fBase = parseFloat(baseForecast);
+                var fAdj = parseFloat(adjustedForecast);
+                var fDiff = (fAdj - fBase).toFixed(1);
+                var fPct = fBase > 0 ? (((fAdj - fBase) / fBase) * 100).toFixed(1) : "0.0";
+                
+                oModel.setProperty("/simCurrentForecast", (!isNaN(fBase) ? fBase.toFixed(1) : "0") + " units");
+                oModel.setProperty("/simSimulatedForecast", (!isNaN(fAdj) ? fAdj.toFixed(1) : "0") + " units");
+                oModel.setProperty("/simDemandDiff", (fDiff >= 0 ? "+" : "") + fDiff + " units (" + (fPct >= 0 ? "+" : "") + fPct + "%)");
                 oModel.setProperty("/simInventoryImpact", shortageVal);
                 oModel.setProperty("/simRecommendedOrder", data.recommended_order !== undefined ? data.recommended_order : 0);
                 oModel.setProperty("/simRisk", data.risk || (data.simulated_case && data.simulated_case.risk) || "---");
                 oModel.setProperty("/simScenarioText", data.scenario_explanation || "");
-                MessageToast.show("Simulation complete.");
+                MessageToast.show("Simulation complete: " + (fDiff >= 0 ? "+" : "") + fDiff + " units demand impact.");
             })
             .catch(error => {
                 oModel.setProperty("/isBusy", false);
@@ -581,7 +598,27 @@ sap.ui.define([
 
         onSideNavSelect: function (oEvent) {
             var sKey = oEvent.getParameter("item").getKey();
-            this.byId("pageContainer").to(this.byId(sKey));
+            var oContainer = this.byId("pageContainer");
+            var oTarget = this.byId(sKey);
+            if (oContainer && oTarget) {
+                oContainer.to(oTarget);
+            }
+            var titleMap = {
+                "dashboard": "Executive Supply Chain Dashboard",
+                "simulator": "What-If Demand Simulator",
+                "inventory": "Master Inventory Management",
+                "analytics": "Model Performance & Anomaly Analytics",
+                "settings": "System Diagnostics & Settings"
+            };
+            var sTitle = titleMap[sKey] || "Executive Supply Chain Dashboard";
+            this.getView().getModel().setProperty("/currentPageTitle", sTitle);
+        },
+
+        onNotificationPress: function () {
+            var oModel = this.getView().getModel();
+            var count = oModel.getProperty("/reorderAlertsCount") || 0;
+            MessageToast.show("🔔 " + count + " active reorder alerts requiring replenishment review.");
+            this.onQuickReviewOrders();
         },
 
         onCollapseExpandPress: function () {
@@ -729,9 +766,24 @@ sap.ui.define([
                 quantity: iRecommended > 0 ? iRecommended : 50
             };
             
+            var sSaved = localStorage.getItem("sap_prognos_session");
+            var sToken = "demo-admin-bearer-token";
+            var sRole = "admin";
+            if (sSaved) {
+                try {
+                    var oS = JSON.parse(sSaved);
+                    if (oS.token) sToken = oS.token;
+                    if (oS.role) sRole = oS.role;
+                } catch(e) {}
+            }
+            
             fetch(this._getApiBaseUrl() + "/purchase-order", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + sToken,
+                    "X-User-Role": sRole
+                },
                 body: JSON.stringify(payload)
             })
             .then(response => {

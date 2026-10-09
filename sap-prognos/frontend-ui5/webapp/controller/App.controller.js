@@ -10,7 +10,14 @@ sap.ui.define([
             
             // Restore session from localStorage if available
             var sSavedSession = localStorage.getItem("sap_prognos_session");
-            var oSessionData = { role: "guest", username: "" };
+            var oSessionData = {
+                role: "admin",
+                username: "admin",
+                fullName: "Anand Jadhav",
+                roleName: "Administrator",
+                email: "anand.jadhav@sap-prognos.internal",
+                avatarText: "AJ"
+            };
             if (sSavedSession) {
                 try {
                     oSessionData = JSON.parse(sSavedSession);

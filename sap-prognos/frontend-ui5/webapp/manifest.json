@@ -31,7 +31,7 @@
       "libs": {
         "sap.m": {},
         "sap.ui.layout": {},
-        "sap.suite.ui.microchart": {}
+        "sap.tnt": {}
       }
     },
     "models": {
@@ -55,6 +55,11 @@
           "target": "login"
         },
         {
+          "pattern": "login",
+          "name": "loginDirect",
+          "target": "login"
+        },
+        {
           "pattern": "main",
           "name": "main",
           "target": "main"
@@ -62,11 +67,11 @@
       ],
       "targets": {
         "login": {
-          "viewId": "login",
+          "viewId": "loginView",
           "viewName": "Login"
         },
         "main": {
-          "viewId": "main",
+          "viewId": "mainView",
           "viewName": "Main"
         }
       }

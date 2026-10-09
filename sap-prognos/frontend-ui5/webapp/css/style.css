@@ -3,18 +3,69 @@
    Clean, consistent, Inter-first design system
    ============================================================ */
 
-/* ─── 1. Google Font Import ──────────────────────────────── */
+/* ─── 1. Fonts & Icon Font Definitions ───────────────────── */
 @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap');
 
-/* ─── 2. Inter font forced on EVERYTHING ─────────────────── */
+@font-face {
+    font-family: "SAP-icons";
+    src: url("https://ui5.sap.com/resources/sap/ui/core/themes/base/fonts/SAP-icons.woff2") format("woff2"),
+         url("https://ui5.sap.com/resources/sap/ui/core/themes/base/fonts/SAP-icons.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* ─── 2. Global Typography & Sizing ───────────────────────── */
 *,
 *::before,
-*::after,
-html, body,
-[class],
-[class] * {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+*::after {
     box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body,
+.sapUiBody,
+.sapMText,
+.sapMLabel,
+.sapMTitle,
+.sapMBtnContent,
+.sapMInputBaseInner,
+.sapMSelect,
+.sapMBar,
+.sapMPanel,
+.sapMPage,
+.sapMDialog,
+.sapMPopover,
+.sapMTable,
+.sapMList,
+.sapMObjectStatusText,
+.sapMSegBBtn,
+.sapMTntToolHeader,
+.sapMTntSideNavigation {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+/* ─── CRITICAL: Protect SAP UI5 Icons From Font Overrides ─── */
+.sapUiIcon,
+.sapUiIcon::before,
+.sapUiIcon::after,
+[data-sap-ui-icon-content],
+[data-sap-ui-icon-content]::before,
+.sapMBtnIcon,
+.sapFAvatarIcon,
+.sapUiIconTitle,
+.sapUiIconMirrorInRtl,
+.sapMSegBBtnIcon {
+    font-family: "SAP-icons" !important;
+    font-style: normal !important;
+    font-weight: normal !important;
+    speak: never;
+    display: inline-block;
+    text-decoration: inherit;
+    text-align: center;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -610,3 +661,270 @@ html, body,
     .kpiValue  { font-size: 1.2rem !important; }
     .tileValue { font-size: 1.6rem !important; }
 }
+
+/* ─── 28. Login Page Styles ──────────────────────────────── */
+/* ─── 28. Enterprise Fiori Login Page ───────────────────── */
+.fioriLoginPage, .fioriLoginPage .sapMPage, .fioriLoginPage .sapMPageBg {
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,142,255,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 85% 100%, rgba(139,92,246,0.14) 0%, transparent 55%),
+                linear-gradient(160deg, #030712 0%, #060e24 100%) !important;
+    min-height: 100vh;
+}
+.loginContainer {
+    min-height: 100vh;
+    padding: 2.5rem 1rem;
+    position: relative;
+    z-index: 10;
+}
+.loginCardPanel {
+    max-width: 460px;
+    background: rgba(11, 19, 43, 0.88) !important;
+    backdrop-filter: blur(28px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+    border: 1px solid rgba(79, 142, 255, 0.22) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.75), 0 0 50px rgba(79, 142, 255, 0.12) !important;
+    padding: 2.5rem 2rem !important;
+    animation: fadeInUp 0.45s ease both;
+}
+.loginLogoBadge {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(79,142,255,0.25), rgba(139,92,246,0.35));
+    border: 1px solid rgba(79,142,255,0.4);
+    box-shadow: 0 0 30px rgba(79,142,255,0.45);
+    margin-bottom: 0.8rem;
+}
+.loginLogoIcon {
+    font-size: 1.8rem !important;
+    color: #60a5fa !important;
+}
+.loginAppTitle {
+    font-size: 1.85rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+    color: #ffffff !important;
+}
+.loginAppSub {
+    font-size: 0.76rem !important;
+    color: #94a3b8 !important;
+    text-align: center;
+    margin-top: 0.25rem;
+    margin-bottom: 1.5rem;
+}
+.roleSelectorBox {
+    margin-bottom: 1rem;
+}
+.fieldLabel {
+    font-size: 0.7rem !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+}
+.credHintBox {
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid rgba(79, 142, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 0.8rem;
+    margin-bottom: 1.2rem;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.credHintBox:hover {
+    background: rgba(30, 41, 59, 0.9);
+}
+.credHintIcon {
+    font-size: 0.9rem !important;
+    color: #38bdf8 !important;
+}
+.credHintText {
+    font-size: 0.76rem !important;
+    color: #cbd5e1 !important;
+    font-weight: 600;
+}
+.autoFillBtn .sapMBtnInner {
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 0.75rem !important;
+    color: #38bdf8 !important;
+}
+.loginInput {
+    margin-bottom: 0.85rem !important;
+}
+.loginInput .sapMInputBase {
+    height: 44px !important;
+    background: rgba(3, 7, 18, 0.75) !important;
+    border: 1px solid rgba(79, 142, 255, 0.2) !important;
+    border-radius: 10px !important;
+}
+.loginInput .sapMInputBaseInner {
+    color: #f8fafc !important;
+    font-size: 0.9rem !important;
+    padding: 0 0.85rem !important;
+}
+.togglePassBtn .sapMBtnInner {
+    height: 28px !important;
+    line-height: 28px !important;
+}
+.submitLoginButton {
+    height: 46px !important;
+    margin-top: 1rem !important;
+    margin-bottom: 1.2rem !important;
+}
+.submitLoginButton .sapMBtnInner {
+    height: 46px !important;
+    line-height: 46px !important;
+    background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%) !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 0.95rem !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45) !important;
+    border: none !important;
+}
+.submitLoginButton:hover .sapMBtnInner {
+    box-shadow: 0 8px 26px rgba(37, 99, 235, 0.65) !important;
+}
+.permPanel {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 10px !important;
+    margin-bottom: 1.2rem !important;
+}
+.permList {
+    gap: 0.45rem;
+    padding: 0.4rem 0;
+}
+.permItem {
+    gap: 0.5rem;
+}
+.permIconYes {
+    color: #22c55e !important;
+    font-size: 0.85rem !important;
+}
+.permIconNo {
+    color: #ef4444 !important;
+    font-size: 0.85rem !important;
+}
+.permText {
+    font-size: 0.76rem !important;
+    color: #94a3b8 !important;
+}
+.permTextDisabled {
+    font-size: 0.76rem !important;
+    color: #475569 !important;
+    text-decoration: line-through;
+}
+.loginFooter {
+    margin-top: 0.5rem;
+}
+.footerText {
+    font-size: 0.7rem !important;
+    color: #475569 !important;
+}
+
+/* ─── 29. Enterprise Supply Chain Dashboard & Header Polish ─── */
+.headerMainTitle {
+    font-size: 1.05rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.2px;
+    color: #ffffff !important;
+    line-height: 1.1;
+}
+.headerSubTitle {
+    font-size: 0.65rem !important;
+    font-weight: 500 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.3px;
+    line-height: 1;
+}
+.headerPageTitleText {
+    font-size: 0.95rem !important;
+    font-weight: 600 !important;
+    color: #cbd5e1 !important;
+    letter-spacing: 0.5px;
+}
+.bellIconBtn .sapMBtnInner {
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+}
+.bellIconBtn:hover .sapMBtnInner {
+    color: #ffffff !important;
+}
+.sectionMainTitle {
+    font-size: 1.35rem !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    letter-spacing: -0.4px;
+}
+.sectionSubTitle {
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    margin-top: 0.2rem;
+}
+.lastRefreshedText {
+    font-size: 0.72rem !important;
+    color: #64748b !important;
+    font-weight: 500;
+}
+.modelBadgeText {
+    font-size: 0.68rem !important;
+    color: #38bdf8 !important;
+    font-weight: 600;
+}
+.kpiSubtext {
+    font-size: 0.68rem !important;
+    color: #64748b !important;
+    font-weight: 500;
+    margin-top: 0.25rem;
+}
+.warningKpiValue {
+    color: #f59e0b !important;
+    text-shadow: 0 0 14px rgba(245, 158, 11, 0.45);
+}
+.infoKpiValue {
+    color: #38bdf8 !important;
+}
+.formFieldLabel {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #94a3b8 !important;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.3rem;
+}
+.fieldHelpText {
+    font-size: 0.72rem !important;
+    color: #64748b !important;
+    line-height: 1.4;
+}
+.sliderValueBadge {
+    background: rgba(56, 189, 248, 0.15);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    color: #38bdf8 !important;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.78rem;
+}
+.confidenceBandText {
+    font-size: 0.74rem !important;
+    color: #94a3b8 !important;
+}
+.chartLegendHint {
+    font-size: 0.72rem !important;
+    color: #94a3b8 !important;
+}
+.xaiFactorText {
+    font-size: 0.76rem !important;
+    color: #e2e8f0 !important;
+    font-weight: 500;
+}
+.tableSubtitle {
+    font-size: 0.74rem !important;
+    color: #64748b !important;
+}
+

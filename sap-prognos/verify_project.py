@@ -1,6 +1,13 @@
 import os
 import sys
 
+# Add forecast-api to path so inventory_service and inventory_db can be resolved
+# by both the Python runtime and static analysis tools.
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_API_DIR = os.path.join(_BASE_DIR, "forecast-api")
+if _API_DIR not in sys.path:
+    sys.path.insert(0, _API_DIR)
+
 def verify_system():
     print("SAP PROGNOS SYSTEM CHECK")
     
@@ -45,7 +52,6 @@ def verify_system():
         
     # 5. API Imports
     try:
-        sys.path.append(api_dir)
         import main
         import inventory_service
         import inventory_db
