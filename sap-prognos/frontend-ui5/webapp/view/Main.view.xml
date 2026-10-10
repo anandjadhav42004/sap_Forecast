@@ -670,6 +670,7 @@
                                         <SearchField 
                                             placeholder="Search by Store, Item, or Risk (e.g. Critical, 2, 10)..." 
                                             width="340px" 
+                                            search=".onInventorySearch"
                                             liveChange=".onInventorySearch" />
                                         <HBox>
                                             <Button 
@@ -693,7 +694,14 @@
                                     </HBox>
 
                                     <!-- Master Inventory Table with Explicit Column Formatting -->
-                                    <Table id="inventoryTable" items="{/fullInventory}" noDataText="Loading inventory catalog records from SQLite...">
+                                    <Table 
+                                        id="inventoryTable" 
+                                        items="{/fullInventory}" 
+                                        busy="{/isBusyInventory}"
+                                        growing="true"
+                                        growingThreshold="30"
+                                        growingScrollToLoad="false"
+                                        noDataText="No inventory catalog records found. Click 'Refresh Inventory' to reload catalog.">
                                         <columns>
                                             <Column width="70px" hAlign="Center"><Text text="Store" /></Column>
                                             <Column width="70px" hAlign="Center"><Text text="Item" /></Column>

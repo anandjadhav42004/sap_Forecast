@@ -40,13 +40,13 @@ def test_simulator_base_vs_simulated_comparison():
     assert len(data["scenario_explanation"]) > 20
 
 def test_anomaly_detection_z_score():
-    # 20 steady baseline points (~50) so std is tight enough (~20)
+    # 30 steady baseline points (~50) so std is tight enough (~24)
     # allowing both 180 (spike, Z > +3.0) and 2 (dip, Z < -2.0) to qualify as outliers
-    historical_sales = [{"date": f"2017-11-{i:02d}", "sales": 50.0} for i in range(1, 21)]
+    historical_sales = [{"date": f"2017-10-{i:02d}", "sales": 50.0} for i in range(1, 31)]
     # Add outlier spike
-    historical_sales.append({"date": "2017-11-21", "sales": 180.0})
+    historical_sales.append({"date": "2017-11-01", "sales": 180.0})
     # Add outlier dip
-    historical_sales.append({"date": "2017-11-22", "sales": 2.0})
+    historical_sales.append({"date": "2017-11-02", "sales": 2.0})
     
     payload = {
         "store": 2,

@@ -19,6 +19,7 @@ sap.ui.define([
                 confLower: "---",
                 confUpper: "---",
                 isBusy: false,
+                isBusyInventory: false,
                 lastUpdated: "Initializing...",
                 currentPageTitle: "Executive Dashboard",
                 reorderAlertsCount: 0,
@@ -97,6 +98,7 @@ sap.ui.define([
             
             this._loadMetrics();
             this._loadReorderAlerts();
+            this._loadInventory();
             this._loadHealth();
             this._loadStoreItemData(2, 10);
         },
@@ -198,9 +200,6 @@ sap.ui.define([
                 .then(data => {
                     oModel.setProperty("/reorderAlertsCount", data.count);
                     
-                    // Full raw alerts list for the separate Master Inventory page
-                    oModel.setProperty("/fullInventory", data.alerts || []);
-                    
                     // Top-10 trimmed list formatted specifically for the Dashboard table
                     var alerts = (data.alerts || []).slice(0, 10).map(function(alert) {
                         var isCritical = alert.current_stock < (alert.safety_stock * 0.5);
@@ -218,6 +217,24 @@ sap.ui.define([
                     oModel.setProperty("/reorderAlerts", alerts);
                 })
                 .catch(err => console.error("Failed to fetch reorder alerts", err));
+        },
+
+        _loadInventory: function () {
+            var oModel = this.getView().getModel();
+            oModel.setProperty("/isBusyInventory", true);
+            fetch(this._getApiBaseUrl() + "/inventory")
+                .then(response => {
+                    if (!response.ok) throw new Error("Failed to load inventory");
+                    return response.json();
+                })
+                .then(data => {
+                    oModel.setProperty("/isBusyInventory", false);
+                    oModel.setProperty("/fullInventory", data.inventory || []);
+                })
+                .catch(err => {
+                    oModel.setProperty("/isBusyInventory", false);
+                    console.error("Failed to fetch full inventory catalog", err);
+                });
         },
         
         onAfterRendering: function () {
@@ -626,6 +643,9 @@ sap.ui.define([
             };
             var sTitle = titleMap[sKey] || "Executive Supply Chain Dashboard";
             this.getView().getModel().setProperty("/currentPageTitle", sTitle);
+            if (sKey === "inventory") {
+                this._loadInventory();
+            }
         },
 
         onNotificationPress: function () {
@@ -642,27 +662,36 @@ sap.ui.define([
         },
         
         onInventorySearch: function (oEvent) {
-            var sQuery = oEvent.getParameter("newValue");
+            var sQuery = oEvent.getParameter("newValue") !== undefined ? oEvent.getParameter("newValue") : oEvent.getParameter("query");
             var oTable = this.byId("inventoryTable");
-            var oBinding = oTable.getBinding("items");
+            var oBinding = oTable ? oTable.getBinding("items") : null;
             var aFilters = [];
             
-            if (sQuery && sQuery.length > 0) {
-                var filterStore = new sap.ui.model.Filter("store", sap.ui.model.FilterOperator.EQ, parseInt(sQuery) || -1);
-                var filterItem = new sap.ui.model.Filter("item", sap.ui.model.FilterOperator.EQ, parseInt(sQuery) || -1);
-                var filterRisk = new sap.ui.model.Filter("risk", sap.ui.model.FilterOperator.Contains, sQuery.toUpperCase());
+            if (sQuery && sQuery.trim().length > 0) {
+                var sTrimmed = sQuery.trim();
+                var iVal = parseInt(sTrimmed);
+                var subFilters = [
+                    new sap.ui.model.Filter("risk", sap.ui.model.FilterOperator.Contains, sTrimmed.toUpperCase())
+                ];
+                if (!isNaN(iVal)) {
+                    subFilters.push(new sap.ui.model.Filter("store", sap.ui.model.FilterOperator.EQ, iVal));
+                    subFilters.push(new sap.ui.model.Filter("item", sap.ui.model.FilterOperator.EQ, iVal));
+                }
                 
                 aFilters.push(new sap.ui.model.Filter({
-                    filters: [filterStore, filterItem, filterRisk],
+                    filters: subFilters,
                     and: false
                 }));
             }
-            oBinding.filter(aFilters);
+            if (oBinding) {
+                oBinding.filter(aFilters);
+            }
         },
         
         onRefreshInventory: function () {
             this._loadReorderAlerts();
-            MessageToast.show("Inventory refreshed.");
+            this._loadInventory();
+            MessageToast.show("Inventory catalog refreshed.");
         },
 
         onExportInventoryCSV: function () {
@@ -805,6 +834,7 @@ sap.ui.define([
                 var order = data.order;
                 MessageToast.show("✅ Order " + order.order_id + " Placed: +" + order.quantity + " units scheduled for Store " + iStore + " — Item " + iItem + " (Delivery: " + order.expected_delivery_date + ")");
                 this._loadReorderAlerts();
+                this._loadInventory();
             })
             .catch(err => {
                 console.error("PO trigger failed:", err);
@@ -839,6 +869,7 @@ sap.ui.define([
                 oModel.setProperty("/isBusy", false);
                 MessageToast.show("⚡ " + data.message);
                 this._loadReorderAlerts();
+                this._loadInventory();
             })
             .catch(err => {
                 oModel.setProperty("/isBusy", false);
